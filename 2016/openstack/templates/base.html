@@ -1,0 +1,69 @@
+{% load staticfiles %}
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>{% block head_title  %}Red Hat OpenStack{% endblock head_title %}</title>
+
+    <link rel="stylesheet"
+	  href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+	  integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7"
+	  crossorigin="anonymous">
+
+    <link href='{% static "css/bootstrap.min.css" %}' rel="stylesheet">
+    <link href='{% static "css/jumbotron.css" %}' rel="stylesheet">
+
+    <style>
+      {% block style %}
+      {% endblock style %}
+    </style>
+  </head>
+  <body>
+
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Swift Demo</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <form class="navbar-form navbar-right">
+            <div class="form-group">
+              <input type="text" placeholder="Email" class="form-control">
+            </div>
+            <div class="form-group">
+              <input type="password" placeholder="Password" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-success">Sign in</button>
+          </form>
+        </div><!--/.navbar-collapse -->
+      </div>
+    </nav>
+
+    <!-- Main jumbotron for a primary marketing message or call to action -->
+    <div class="jumbotron">
+      <div class="container">
+	<h1>Red Hat OpenStack Swift</h1>
+        <p>Red Hat Bootcamp 2016</p>
+        <p><a class="btn btn-primary btn-lg" href="#" role="button">Learn more &raquo;</a></p>
+      </div>
+    </div>
+
+    <div class="container">
+
+	{% block content %}
+	{% endblock content %}
+
+    <hr>
+
+    <footer>
+      <p>&copy; 2016 Red Hat, Inc.</p>
+    </footer>
+
+  </div> <!-- container  -->
+  </body>
+</html>

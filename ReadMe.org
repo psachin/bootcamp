@@ -1,0 +1,7 @@
+* Bootcamp
+
+  This repo holds all bootcamp related projects, links and docs.
+
+** 2016
+*** Red Hat OpenStack: Swift
+    Please see =2016/openstack/ReadMe.org= for usage instructions.

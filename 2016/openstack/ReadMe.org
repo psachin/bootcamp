@@ -1,0 +1,32 @@
+* OpenStack Swift Demo
+
+** Usage
+   - Clone this repo
+     #+BEGIN_SRC sh
+       git clone https://gitlab.cee.redhat.com/psachin/bootcamp.git
+     #+END_SRC
+
+   - Create a virtual enviroment and activate
+     #+BEGIN_SRC sh
+       virtualenv -p /usr/bin/python3.4 ~/virtualenvs/bootcamp
+       source ~/virtualenvs/bootcamp/bin/activate
+     #+END_SRC
+
+   - Install Python dependencies
+     #+BEGIN_SRC sh
+       cd bootcamp/2016/openstack/
+       pip install -r requirements.txt
+     #+END_SRC
+
+   - Create temporary database(Optional)
+     #+BEGIN_SRC sh
+       python manage.py makemigrations
+       python manage.py migrate
+     #+END_SRC
+
+   - Finally run Django server
+     #+BEGIN_SRC sh
+       python manage.py runserver
+     #+END_SRC
+
+   - Keep the server running and open =http://localhost:8000/swift= in your web browser

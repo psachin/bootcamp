@@ -1,0 +1,14 @@
+# To obtain StorageURL and Auth token
+swift stat -v
+
+swift stat [container]
+swift stat [container] [object]
+
+swift capabilities
+
+swift list --lh [container]
+
+swift post p-archive -H "content-length: 0"
+swift post p-current -H "content-length: 0" -H "X-Versions-Location: p-archive"
+
+
