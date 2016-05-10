@@ -12,3 +12,10 @@ swift post p-archive -H "content-length: 0"
 swift post p-current -H "content-length: 0" -H "X-Versions-Location: p-archive"
 
 
+# --------------------
+swift post archive
+swift post current -H "X-Versions-Location: archive"
+
+swift post -r ".r:*" archive
+swift post -r ".r:*" current
+

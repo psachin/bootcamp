@@ -16,23 +16,34 @@ class SwiftView(ContextMixin, TemplateResponseMixin, View):
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         context['title'] = 'Swift'
+
         publicURL = 'http://192.168.8.80:8080/v1/AUTH_test'
         token = 'AUTH_tkd749c417e2c049af898f0960f5230958'
 
-        current_container = 'p-current'
-        archive_container = 'p-archive'
+        current_container = 'current'
+        archive_container = 'archive'
 
         resp_current = requests.get(publicURL + "/" + current_container,
-                            headers={'X-Auth-Token': token})
+                                    headers={'X-Auth-Token': token})
         # print(resp_current.status_code)
-        context['current_image'] = publicURL + "/" + current_container + "/" + resp_current.text
+        if resp_current.status_code == 404:
+            context['current_image'] = None
+        elif resp_current.text:
+            context['current_image'] = publicURL + "/" + current_container + "/" \
+                                   + resp_current.text
+
 
         resp_archive = requests.get(publicURL + "/" + archive_container,
-                            headers={'X-Auth-Token': token})
-        # print(resp_archive.text.split())
-        context['archived_images'] = list()
-        archived_images = resp_archive.text.split()
-        for i in archived_images:
-            context['archived_images'].append(publicURL + "/" + archive_container + "/" + i)
+                                    headers={'X-Auth-Token': token})
+        # print(resp_archive.status_code)
+        if resp_archive.status_code == 404:
+            context['archived_images'] = None
+        else:
+            context['archived_images'] = list()
+            archived_images = resp_archive.text.split()
+            for i in archived_images:
+                context['archived_images'].append(
+                    publicURL + "/" + archive_container + "/" + i)
+
         return self.render_to_response(context)
 
