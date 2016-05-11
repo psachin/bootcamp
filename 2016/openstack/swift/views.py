@@ -33,8 +33,15 @@ class SwiftView(ContextMixin, TemplateResponseMixin, View):
         context['year'] = '2016'
         context['title'] = 'Swift'
 
-        publicURL = 'http://192.168.8.80:8080/v1/AUTH_test'
-        token = 'AUTH_tkd749c417e2c049af898f0960f5230958'
+        srv_ip_addr = '192.168.8.80'
+        srv_port = 8080
+        publicAuthURL = 'http://' + srv_ip_addr + ':' + str(srv_port) + '/auth/v1.0/'
+        publicURL = 'http://' + srv_ip_addr + ':' + str(srv_port) + '/v1/AUTH_test'
+
+        resp = requests.get(publicAuthURL,
+                                headers={'X-Auth-User': 'test:tester',
+                                         'X-Auth-Key': 'testing'})
+        token = resp.headers['X-Auth-Token']
 
         current_container = 'current'
         archive_container = 'archive'
@@ -47,7 +54,6 @@ class SwiftView(ContextMixin, TemplateResponseMixin, View):
         elif resp_current.text:
             context['current_image'] = publicURL + "/" + current_container + "/" \
                                    + resp_current.text
-
 
         resp_archive = requests.get(publicURL + "/" + archive_container,
                                     headers={'X-Auth-Token': token})
@@ -63,4 +69,3 @@ class SwiftView(ContextMixin, TemplateResponseMixin, View):
             context['archived_images'].sort(reverse=True)
 
         return self.render_to_response(context)
-
