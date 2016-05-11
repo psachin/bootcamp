@@ -10,11 +10,27 @@ from django.views.generic.base import (
 from django.views.generic import View
 
 # Create your views here.
-class SwiftView(ContextMixin, TemplateResponseMixin, View):
-    '''This is same as DashBoardTemplateView but built from scratch
+class RootView(ContextMixin, TemplateResponseMixin, View):
+    '''View that will be display root template
     '''
+    template_name = "root.html"
+
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
+        context['year'] = '2016'
+        context['title'] = ''
+
+        return self.render_to_response(context)
+
+
+class SwiftView(ContextMixin, TemplateResponseMixin, View):
+    '''View to display container's objects
+    '''
+    template_name = "swift.html"
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        context['year'] = '2016'
         context['title'] = 'Swift'
 
         publicURL = 'http://192.168.8.80:8080/v1/AUTH_test'
@@ -44,6 +60,7 @@ class SwiftView(ContextMixin, TemplateResponseMixin, View):
             for i in archived_images:
                 context['archived_images'].append(
                     publicURL + "/" + archive_container + "/" + i)
+            context['archived_images'].sort(reverse=True)
 
         return self.render_to_response(context)
 

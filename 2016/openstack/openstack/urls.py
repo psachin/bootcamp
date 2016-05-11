@@ -17,11 +17,12 @@ from django.conf.urls.static import static
 from django.conf.urls import include, url
 from django.contrib import admin
 
-from swift.views import SwiftView
+from swift.views import RootView, SwiftView
 
 urlpatterns = [
+    url(r'^$', RootView.as_view(), name='root'),
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^swift/$', SwiftView.as_view(template_name="swift.html"), name='swift'),
+    url(r'^swift/$', SwiftView.as_view(), name='swift'),
 ]
 
 if settings.DEBUG:

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block head_title  %}
+{{ title }} | {{ block.super }}
+{% endblock head_title %}
+
+{% block content %}
+      <!-- Example row of columns -->
+      <div class="row">
+	<p>
+	  <a class="btn btn-success btn-lg btn-block"
+	     href="/swift/"
+	     role="button">Go to Swift demo
+	  </a>
+	</p>
+      </div> <!-- row -->
+
+{% endblock content %}
