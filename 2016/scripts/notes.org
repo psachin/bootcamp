@@ -1,21 +1,85 @@
-# To obtain StorageURL and Auth token
-swift stat -v
+* Swift
 
-swift stat [container]
-swift stat [container] [object]
-
-swift capabilities
-
-swift list --lh [container]
-
-swift post p-archive -H "content-length: 0"
-swift post p-current -H "content-length: 0" -H "X-Versions-Location: p-archive"
+- Multiple HDD, where is my data store?
+- HDD failure
+- Storage problem
 
 
-# --------------------
-swift post archive
-swift post current -H "X-Versions-Location: archive"
+- Ownership of your data
+- Access to data, HTTP, FTP, ReST
+  - Mobile, Laptop..
 
-swift post -r ".r:*" archive
-swift post -r ".r:*" current
+- Swift
+  - loosely tied to storage media
+  - Scalable
+  - Direct client access
+
+
+- Terminology
+  - Proxy: provides API access/ Coordinates requests to storage
+    servers
+  - Account: user namespace
+  - Container: User defined segment of an account(root directory)
+  - Object: Actual data
+
+- Flow
+  Proxy request -> Storage nodes(account, container, obj)
+
+- Data placement
+  - triple replication by default(as unique as possible)
+  - Show Region/Zone pic
+
+- Drive failures
+  1. Umount failing drive
+  2. Replicate/rebalance data
+
+- Server failures
+  0. Network, Power
+  1. New data that is to be written will be placed elsewhere within a
+     cluster/server
+  2. Rebalancing happens
+
+- Currupt data
+  1. Stores checksum of the data with data itself
+  2. Matches checksum of data periodically
+     - If checksum doesnt match, the object is quarantined and the
+       replication process rebalances the data/object
+
+- Storage policies
+  - Decide where you want to store data
+    - Between swift clusters
+    - Subset of hardware
+  - Erasure coding <- Data availability policies
+    - Based in frequency of access
+
+- ACLs
+
+** Commands
+   - To obtain StorageURL and Auth token
+     #+BEGIN_SRC sh -n
+       # To obtain Storage URL and Auth-Token
+       swift stat -v
+
+       # Get statistics of container and/or object
+       swift stat [container]
+       swift stat [container] [object]
+
+       # Retrive capability of proxy
+       swift capabilities
+
+       # List container's details(Similar to `ls -lh`)
+       swift list --lh [container]
+
+       # archive container to hold current container's overwritten objects
+       swift post archive
+       swift post current -H "X-Versions-Location: archive"
+
+       # can also define content length at the time of creating a container
+       swift post archive -H "content-length: 0"
+       swift post current -H "content-length: 0" -H "X-Versions-Location: archive"
+
+       # ACL: World readable
+       swift post -r ".r:*" archive
+       swift post -r ".r:*" current
+     #+END_SRC
 
