@@ -29,4 +29,8 @@
        python manage.py runserver
      #+END_SRC
 
-   - Keep the server running and open =http://localhost:8000/swift= in your web browser
+   - Keep the server running and open =http://localhost:8000= in web
+     browser. You should see something like this
+
+     [[static/img/runserver.png][runserver]]
+
