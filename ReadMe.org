@@ -4,4 +4,8 @@
 
 ** 2016
 *** Red Hat OpenStack: Swift
-    Please see =2016/openstack/ReadMe.org= for usage instructions.
+    - Django web application to demonstrate:
+      - Access to `object`s
+      - Archive and current `container`s
+    - Please see [[./2016/openstack/ReadMe.org]] for install/usage
+      instructions.

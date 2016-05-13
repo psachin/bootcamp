@@ -1,11 +1,47 @@
-publicURL="http://192.168.8.80:8080/v1/AUTH_test"
-token="AUTH_tkd749c417e2c049af898f0960f5230958"
+publicURL="http://192.168.8.80:8080/v1/AUTH_pune"
+authURL="http://192.168.8.80:8080/auth/v1.0/"
 
 # Get token
-curl -v \
-     -H "X-Auth-User: test:tester" \
-     -H "X-Auth-Key: testing" \
-     http://192.168.8.80:8080/auth/v1.0/
+# curl -v \
+#      -H "X-Auth-User: test:tester" \
+#      -H "X-Auth-Key: testing" \
+#      $authURL
+
+# curl -v \
+#      -H "X-Auth-User: pune:psachin" \
+#      -H "X-Auth-Key: psachin" \
+#      $authURL
+
+token="AUTH_tk968b0ae7947640be874af6cd897a2b1e"
+
+# Verifying Account Access
+# curl -v \
+#      -H "X-Storage-Token: $token" \
+#      $publicURL
+
+# Creating a container
+# curl -v \
+#      -H "X-Storage-Token: $token" \
+#      -X PUT $publicURL/keys
+
+# Verifying a container
+# curl -v \
+#      -H "X-Storage-Token: $token" \
+#      -X GET $publicURL/keys
+
+# # Uploading an object
+# curl -v \
+#      -H "X-Storage-Token: $token" \
+#      -X PUT $publicURL/keys/mykey.pem -T mykey.pem
+
+# Download an object
+# curl -v \
+#      -H "X-Storage-Token: $token" \
+#      -X GET $publicURL/keys/mykey.pem > mykey.pem
+
+# --------------------
+
+# curl -X GET -i  -H  “X-Auth-Token: $TOKEN”  $STORAGE_URL/container1/photo.jpg
 
 #curl -i $publicURL/archive -X PUT -H "Content-length: 0" -H "X-Auth-Token: $token"
 
@@ -62,5 +98,3 @@ curl -v \
 # curl -X GET -i -H "X-Auth-Token: $token" $publicURL/archive?delimiter=/
 
 # curl -i $publicURL/p-archive?prefix=008cat6.jpg -X GET -H "X-Auth-Token: $token"
-
-
