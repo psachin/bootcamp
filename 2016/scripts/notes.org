@@ -4,9 +4,20 @@
 #+OPTIONS: toc:nil email:t
 #+LATEX_CLASS: article
 #+LATEX_CLASS_OPTIONS:
-#+LATEX_HEADER:
 #+LATEX_HEADER_EXTRA:
+#+LaTeX_HEADER: \usepackage[a4paper, total={6in, 10in}]{geometry}
+#+LaTeX_HEADER: \usepackage[utf8]{inputenc}
+#+LaTeX_HEADER: \usepackage[english]{babel}
+
 #+LaTeX_HEADER: \usepackage{minted}
+#+LaTeX_HEADER: \usemintedstyle{emacs}
+
+#+LaTeX_HEADER: \renewcommand{\familydefault}{\rmdefault}
+#+LaTeX_HEADER: \usepackage[usenames, dvipsnames]{color}
+#+LaTeX_HEADER: \pagenumbering{arabic}
+#+LaTeX_HEADER: \usepackage{hyperref}
+#+LaTeX_HEADER: \hypersetup{colorlinks=true, linkcolor=blue, filecolor=magenta, urlcolor=cyan,}
+#+LaTeX_HEADER: \urlstyle{same}
 
 ** Theory
    - Swift allows users to store unstructured data(objects) with
@@ -22,8 +33,8 @@
 
       - =/account/container/object=: This is actual file. User may
         start storing a single file(files are stored in container as
-        an object), or hierarchical data like
-        =/photos/alaska/magic_bus/me.jpg= as an object. Swift stores
+        an object), or hierarchical data like \newline
+        =/photos/alaska/magic-bus/me.jpg= as an object. Swift stores
         multiple copies of single object across physical locations to
         ensure the data reliability and availability.
 
@@ -32,11 +43,11 @@
      form of =/account/container/object=.
 
 ** Handy commands
-   - /Note/: I have configured Swift on IP address
-     =192.168.8.80:8080=. Following examples has =account= with the
-     name /wasteland/, =container= with the name /keys/ and file(=object=)
-     with the name /mykey.pem/. My =AuthURL= is
-     /http://192.168.8.80:8080/auth/v1.0/ and =Pubic-URL= is
+   - /Note/: My Swift cluster is running on =192.168.8.80:8080=.
+     Following examples has =account= with the name /wasteland/,
+     =container= with the name /keys/ and file(=object=) with the name
+     /mykey.pem/. My =AuthURL= is /http://192.168.8.80:8080/auth/v1.0/
+     and =PubicURL/StorageURL= is
      /http://192.168.8.80:8080/v1/AUTH_wasteland/
 
    - Fetching info about Swift proxy. If you have access to Swift
@@ -59,7 +70,7 @@
        #                   Content-Type: text/plain; charset=utf-8
      #+END_SRC
 
-     /Configuration/: Authentication & Authorization.
+     \vskip15ex
 
    - New user can be added as follows,
      #+BEGIN_SRC sh
@@ -96,8 +107,8 @@
        source ~/.profile
      #+END_SRC
 
-     /Most of the time, no configuration is need, if Swift is enabled
-     during packstack. You can actually start from here./
+     /Most of the time, no configuration is needed, if Swift is
+     enabled during packstack. You can actually start from here./
      #+BEGIN_SRC sh
        # --- Create container: 'keys' ---
        swift post keys
@@ -265,7 +276,8 @@
        # *   Trying 192.168.8.80...
        #   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
        #                                  Dload  Upload   Total   Spent    Left  Speed
-       #   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0* Connected to 192.168.8.80 (192.168.8.80) port 8080 (#0)
+           #   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:-- 0* \
+       #                          Connected to 192.168.8.80 (192.168.8.80) port 8080 (#0)
        # > GET /v1/AUTH_wasteland/keys/mykey.pem HTTP/1.1
        # > Host: 192.168.8.80:8080
        # > User-Agent: curl/7.43.0
@@ -314,6 +326,18 @@
        swift post -r ".r:*" archive -H "content-length: 0"
        swift post -r ".r:*" current -H "content-length: 0" -H "X-Versions-Location: archive"
      #+END_SRC
+
+** Additional notes
+   /Swift/ consistency processes:
+   - /Auditor/: Will walk through the storage nodes, read the data and
+     the checksum, ensure the checksum matched with the database
+     checksum. If the checksum didn't match, the data is moved to the
+     Quarantine.
+   - /Replicator/: The replicator, will also scan each drive and
+     ensures that the replicas of data is stored where is supposed to
+     live. If it does not finds the data in that place(may be the
+     data, due to corruption was moved to Quarantine), it will push
+     the data to that place.
 
 ** Slides notes
 
@@ -369,3 +393,9 @@
     - Based in frequency of access
 
 - ACLs
+
+** Links
+   - [[https://gitlab.cee.redhat.com/psachin/bootcamp]]
+   - HTML version of this\footnote[1]{Made with Love, LaTeX \& GNU Emacs} doc:
+     https://gitlab.cee.redhat.com/psachin/bootcamp/blob/master/2016/scripts/notes.org
+   - Slides: [[https://redhat.slides.com/psachin/rhosp-swift-2016]]

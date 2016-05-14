@@ -1,4 +1,4 @@
-% Created 2016-05-13 Fri 20:49
+% Created 2016-05-14 Sat 20:12
 \documentclass{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -16,7 +16,17 @@
 \usepackage{amssymb}
 \usepackage{hyperref}
 \tolerance=1000
+\usepackage[a4paper, total={6in, 10in}]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
 \usepackage{minted}
+\usemintedstyle{emacs}
+\renewcommand{\familydefault}{\rmdefault}
+\usepackage[usenames, dvipsnames]{color}
+\pagenumbering{arabic}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=blue, filecolor=magenta, urlcolor=cyan,}
+\urlstyle{same}
 \author{Sachin\thanks{psachin@redhat.com}}
 \date{May 18, 2016}
 \title{Red Hat OpenStack Platform - Swift}
@@ -45,8 +55,8 @@ containers with no limit.
 
 \item \texttt{/account/container/object}: This is actual file. User may
 start storing a single file(files are stored in container as
-an object), or hierarchical data like
-\texttt{/photos/alaska/magic\_bus/me.jpg} as an object. Swift stores
+an object), or hierarchical data like \newline
+\texttt{/photos/alaska/magic-bus/me.jpg} as an object. Swift stores
 multiple copies of single object across physical locations to
 ensure the data reliability and availability.
 \end{itemize}
@@ -59,11 +69,11 @@ form of \texttt{/account/container/object}.
 \section{Handy commands}
 \label{sec-2}
 \begin{itemize}
-\item \emph{Note}: I have configured Swift on IP address
-\texttt{192.168.8.80:8080}. Following examples has \texttt{account} with the
-name \emph{wasteland}, \texttt{container} with the name \emph{keys} and file(\texttt{object})
-with the name \emph{mykey.pem}. My \texttt{AuthURL} is
-\emph{\url{http://192.168.8.80:8080/auth/v1.0}} and \texttt{Pubic-URL} is
+\item \emph{Note}: My Swift cluster is running on \texttt{192.168.8.80:8080}.
+Following examples has \texttt{account} with the name \emph{wasteland},
+\texttt{container} with the name \emph{keys} and file(\texttt{object}) with the name
+\emph{mykey.pem}. My \texttt{AuthURL} is \emph{\url{http://192.168.8.80:8080/auth/v1.0}}
+and \texttt{PubicURL/StorageURL} is
 \emph{\url{http://192.168.8.80:8080/v1/AUTH_wasteland}}
 
 \item Fetching info about Swift proxy. If you have access to Swift
@@ -86,7 +96,7 @@ swift stat -v
 #                   Content-Type: text/plain; charset=utf-8
 \end{minted}
 
-\emph{Configuration}: Authentication \& Authorization.
+\vskip15ex
 
 \item New user can be added as follows,
 \begin{minted}[]{sh}
@@ -123,8 +133,8 @@ Source the file before executing any command
 source ~/.profile
 \end{minted}
 
-\emph{Most of the time, no configuration is need, if Swift is enabled
-during packstack. You can actually start from here.}
+\emph{Most of the time, no configuration is needed, if Swift is
+enabled during packstack. You can actually start from here.}
 \begin{minted}[]{sh}
 # --- Create container: 'keys' ---
 swift post keys
@@ -292,7 +302,8 @@ curl -v \
 # *   Trying 192.168.8.80...
 #   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
 #                                  Dload  Upload   Total   Spent    Left  Speed
-#   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0* Connected to 192.168.8.80 (192.168.8.80) port 8080 (#0)
+    #   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:-- 0* \
+#                          Connected to 192.168.8.80 (192.168.8.80) port 8080 (#0)
 # > GET /v1/AUTH_wasteland/keys/mykey.pem HTTP/1.1
 # > Host: 192.168.8.80:8080
 # > User-Agent: curl/7.43.0
@@ -343,8 +354,23 @@ swift post -r ".r:*" current -H "content-length: 0" -H "X-Versions-Location: arc
 \end{minted}
 \end{itemize}
 
-\section{Slides notes}
+\section{Additional notes}
 \label{sec-3}
+\emph{Swift} consistency processes:
+\begin{itemize}
+\item \emph{Auditor}: Will walk through the storage nodes, read the data and
+the checksum, ensure the checksum matched with the database
+checksum. If the checksum didn't match, the data is moved to the
+Quarantine.
+\item \emph{Replicator}: The replicator, will also scan each drive and
+ensures that the replicas of data is stored where is supposed to
+live. If it does not finds the data in that place(may be the
+data, due to corruption was moved to Quarantine), it will push
+the data to that place.
+\end{itemize}
+
+\section{Slides notes}
+\label{sec-4}
 
 \begin{itemize}
 \item Multiple HDD, where is my data store?
@@ -423,6 +449,15 @@ replication process rebalances the data/object
 \end{itemize}
 
 \item ACLs
+\end{itemize}
+
+\section{Links}
+\label{sec-5}
+\begin{itemize}
+\item \url{https://gitlab.cee.redhat.com/psachin/bootcamp}
+\item HTML version of this\footnote[1]{Made with Love, LaTeX \& GNU Emacs} doc:
+\url{https://gitlab.cee.redhat.com/psachin/bootcamp/blob/master/2016/scripts/notes.org}
+\item Slides: \url{https://redhat.slides.com/psachin/rhosp-swift-2016}
 \end{itemize}
 % Emacs 25.0.93.1 (Org mode 8.2.10)
 \end{document}
