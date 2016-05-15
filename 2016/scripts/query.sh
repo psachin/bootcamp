@@ -1,4 +1,4 @@
-publicURL="http://192.168.8.80:8080/v1/AUTH_pune"
+publicURL="http://192.168.8.80:8080/v1/AUTH_wasteland"
 authURL="http://192.168.8.80:8080/auth/v1.0/"
 
 # Get token
@@ -8,11 +8,12 @@ authURL="http://192.168.8.80:8080/auth/v1.0/"
 #      $authURL
 
 # curl -v \
-#      -H "X-Auth-User: pune:psachin" \
+#      -H "X-Auth-User: wasteland:psachin" \
 #      -H "X-Auth-Key: psachin" \
 #      $authURL
 
-token="AUTH_tk968b0ae7947640be874af6cd897a2b1e"
+token="AUTH_tk907e29d769074551a7b6f4540e9fde0c"
+tester_token="AUTH_tka56d8d7e7e4c429088a2f962bbcf47ab"
 
 # Verifying Account Access
 # curl -v \
@@ -25,9 +26,9 @@ token="AUTH_tk968b0ae7947640be874af6cd897a2b1e"
 #      -X PUT $publicURL/keys
 
 # Verifying a container
-# curl -v \
-#      -H "X-Storage-Token: $token" \
-#      -X GET $publicURL/keys
+curl -v \
+     -H "X-Storage-Token: $tester_token" \
+     -X GET $publicURL/photos
 
 # # Uploading an object
 # curl -v \

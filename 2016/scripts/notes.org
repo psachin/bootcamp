@@ -16,7 +16,7 @@
 #+LaTeX_HEADER: \usepackage[usenames, dvipsnames]{color}
 #+LaTeX_HEADER: \pagenumbering{arabic}
 #+LaTeX_HEADER: \usepackage{hyperref}
-#+LaTeX_HEADER: \hypersetup{colorlinks=true, linkcolor=blue, filecolor=magenta, urlcolor=cyan,}
+#+LaTeX_HEADER: \hypersetup{colorlinks=true, linkcolor=blue, filecolor=magenta, urlcolor=cyan}
 #+LaTeX_HEADER: \urlstyle{same}
 
 ** Theory
@@ -51,8 +51,8 @@
      /http://192.168.8.80:8080/v1/AUTH_wasteland/
 
    - Fetching info about Swift proxy. If you have access to Swift
-     server, =Pubic-URL/StorageURL= & =account= can be fetched using
-     following command,
+     server, =Pubic-URL/StorageURL=, =Auth-Token=, & =account= can be
+     fetched using following command,
      #+BEGIN_SRC sh
        swift stat -v
        #                     StorageURL: http://192.168.8.80:8080/v1/AUTH_wasteland
@@ -96,10 +96,11 @@
 
      Set following environmental variables
      #+BEGIN_SRC sh
-       # ~/.profile
+       # --- ~/.profile ---
        export ST_AUTH=http://192.168.8.80:8080/auth/v1.0
        export ST_USER=wasteland:psachin
        export ST_KEY=psachin
+       # --- File ends here ---
      #+END_SRC
 
      Source the file before executing any command
@@ -299,7 +300,7 @@
        # * Connection #0 to host 192.168.8.80 left intact
      #+END_SRC
 
-   - Object versioning
+   - Get statistics
      #+BEGIN_SRC sh
        # To obtain Storage URL and Auth-Token
        swift stat -v
@@ -313,18 +314,40 @@
 
        # List container's details(Similar to `ls -lh`)
        swift list --lh [container]
+     #+END_SRC
 
-       # 'archive' container to hold 'current' container's object versions
+   - Object versioning
+
+     When an object is overwritten, it's older version is lost, but
+     there is a way we can store older version(s) of an object, no
+     matter how many times is was overwritten.
+
+     To enable object versioning, set =allow_versions= option to
+     =true= in container configuration file.
+     #+BEGIN_SRC sh
+       # --- /etc/swift/container-server.conf ---
+       [app:container-server]
+       allow_versions = true
+       # --- File ends here ---
+     #+END_SRC
+
+     #+BEGIN_SRC sh
+       # Create 'archive' container to hold 'current' container's object versions
        swift post archive
+
+       # Now create 'current' container with header 'X-Versions-Location'
+       # pointing to 'archive'
        swift post current -H "X-Versions-Location: archive"
 
+       # --- Other similar ways(Optional) ---
        # May also define content length at the time of creating a container
        swift post archive -H "content-length: 0"
        swift post current -H "content-length: 0" -H "X-Versions-Location: archive"
 
-       # And also specify ACL(World readable) during container creation
+       # And also specify Read ACL(World readable) during container creation
        swift post -r ".r:*" archive -H "content-length: 0"
        swift post -r ".r:*" current -H "content-length: 0" -H "X-Versions-Location: archive"
+       # --- xxx ---
      #+END_SRC
 
 ** Additional notes
@@ -374,10 +397,10 @@
   2. Replicate/rebalance data
 
 - Server failures
-  0. Network, Power
-  1. New data that is to be written will be placed elsewhere within a
+  1. Network, Power
+  2. New data that is to be written will be placed elsewhere within a
      cluster/server
-  2. Rebalancing happens
+  3. Rebalancing happens
 
 - Currupt data
   1. Stores checksum of the data with data itself
@@ -392,10 +415,48 @@
   - Erasure coding <- Data availability policies
     - Based in frequency of access
 
+- Erasure Codes
+  - [[https://www.youtube.com/watch?v=kH3DXMKlEr8]]
+  - [[https://www.youtube.com/watch?v=GDNK1S4FJBQ]]
+
 - ACLs
+  - Container ACL
+    #+BEGIN_SRC sh
+      # World readable
+      swift post -r ".r:*" photos
+
+      # Allow .welcome.com but deny .noisy.com
+      swift post -r ".r:*.welcome.com,.r:-noisy.com" photos
+
+      # Enable object listing within a container
+      swift post -r ".r:*,.rlistings" photos
+    #+END_SRC
+  - Account ACL
+
+- Hashing
+  - Swift hashing function
+    #+BEGIN_SRC python -n
+      # Swift hashing is based on MD5
+      # hash(path) = md5(path + per-cluster suffix)
+
+      # Python snippet to know on which drive the object is stored. Say I
+      # have 4 drives
+      from hashlib import md5
+
+      m = md5()
+      m.update("/account/container/object")  # Hypothetical object path
+      digest = m.hexdigest()
+      print(digest)
+
+      # hex to int
+      hex2int = int(digest, 16)
+      print(hex2int)
+      # digest % (number of drives) = Drive number
+      print(hex2int % 4)  # 2
+    #+END_SRC
 
 ** Links
    - [[https://gitlab.cee.redhat.com/psachin/bootcamp]]
-   - HTML version of this\footnote[1]{Made with Love, LaTeX \& GNU Emacs} doc:
+   - HTML version of this\footnote[1]{Made with Love, \LaTeX, \& GNU Emacs} doc is available at: \newline
      https://gitlab.cee.redhat.com/psachin/bootcamp/blob/master/2016/scripts/notes.org
    - Slides: [[https://redhat.slides.com/psachin/rhosp-swift-2016]]

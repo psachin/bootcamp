@@ -1,4 +1,4 @@
-% Created 2016-05-14 Sat 20:12
+% Created 2016-05-15 Sun 18:45
 \documentclass{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -25,7 +25,7 @@
 \usepackage[usenames, dvipsnames]{color}
 \pagenumbering{arabic}
 \usepackage{hyperref}
-\hypersetup{colorlinks=true, linkcolor=blue, filecolor=magenta, urlcolor=cyan,}
+\hypersetup{colorlinks=true, linkcolor=blue, filecolor=magenta, urlcolor=cyan}
 \urlstyle{same}
 \author{Sachin\thanks{psachin@redhat.com}}
 \date{May 18, 2016}
@@ -77,8 +77,8 @@ and \texttt{PubicURL/StorageURL} is
 \emph{\url{http://192.168.8.80:8080/v1/AUTH_wasteland}}
 
 \item Fetching info about Swift proxy. If you have access to Swift
-server, \texttt{Pubic-URL/StorageURL} \& \texttt{account} can be fetched using
-following command,
+server, \texttt{Pubic-URL/StorageURL}, \texttt{Auth-Token}, \& \texttt{account} can be
+fetched using following command,
 \begin{minted}[]{sh}
 swift stat -v
 #                     StorageURL: http://192.168.8.80:8080/v1/AUTH_wasteland
@@ -122,10 +122,11 @@ swift-init proxy restart
 
 Set following environmental variables
 \begin{minted}[]{sh}
-# ~/.profile
+# --- ~/.profile ---
 export ST_AUTH=http://192.168.8.80:8080/auth/v1.0
 export ST_USER=wasteland:psachin
 export ST_KEY=psachin
+# --- File ends here ---
 \end{minted}
 
 Source the file before executing any command
@@ -325,7 +326,7 @@ curl -v \
 # * Connection #0 to host 192.168.8.80 left intact
 \end{minted}
 
-\item Object versioning
+\item Get statistics
 \begin{minted}[]{sh}
 # To obtain Storage URL and Auth-Token
 swift stat -v
@@ -339,18 +340,40 @@ swift capabilities
 
 # List container's details(Similar to `ls -lh`)
 swift list --lh [container]
+\end{minted}
 
-# 'archive' container to hold 'current' container's object versions
+\item Object versioning
+
+When an object is overwritten, it's older version is lost, but
+there is a way we can store older version(s) of an object, no
+matter how many times is was overwritten.
+
+To enable object versioning, set \texttt{allow\_versions} option to
+\texttt{true} in container configuration file.
+\begin{minted}[]{sh}
+# --- /etc/swift/container-server.conf ---
+[app:container-server]
+allow_versions = true
+# --- File ends here ---
+\end{minted}
+
+\begin{minted}[]{sh}
+# Create 'archive' container to hold 'current' container's object versions
 swift post archive
+
+# Now create 'current' container with header 'X-Versions-Location'
+# pointing to 'archive'
 swift post current -H "X-Versions-Location: archive"
 
+# --- Other similar ways(Optional) ---
 # May also define content length at the time of creating a container
 swift post archive -H "content-length: 0"
 swift post current -H "content-length: 0" -H "X-Versions-Location: archive"
 
-# And also specify ACL(World readable) during container creation
+# And also specify Read ACL(World readable) during container creation
 swift post -r ".r:*" archive -H "content-length: 0"
 swift post -r ".r:*" current -H "content-length: 0" -H "X-Versions-Location: archive"
+# --- xxx ---
 \end{minted}
 \end{itemize}
 
@@ -448,15 +471,59 @@ replication process rebalances the data/object
 \end{itemize}
 \end{itemize}
 
+\item Erasure Codes
+\begin{itemize}
+\item \url{https://www.youtube.com/watch?v=kH3DXMKlEr8}
+\item \url{https://www.youtube.com/watch?v=GDNK1S4FJBQ}
+\end{itemize}
+
 \item ACLs
+\begin{itemize}
+\item Container ACL
+\begin{minted}[]{sh}
+# World readable
+swift post -r ".r:*" photos
+
+# Allow .welcome.com but deny .noisy.com
+swift post -r ".r:*.welcome.com,.r:-noisy.com" photos
+
+# Enable object listing within a container
+swift post -r ".r:*,.rlistings" photos
+\end{minted}
+\item Account ACL
+\end{itemize}
+
+\item Hashing
+\begin{itemize}
+\item Swift hashing function
+\begin{minted}[linenos,firstnumber=1]{python}
+# Swift hashing is based on MD5
+# hash(path) = md5(path + per-cluster suffix)
+
+# Python snippet to know on which drive the object is stored. Say I
+# have 4 drives
+from hashlib import md5
+
+m = md5()
+m.update("/account/container/object")  # Hypothetical object path
+digest = m.hexdigest()
+print(digest)
+
+# hex to int
+hex2int = int(digest, 16)
+print(hex2int)
+# digest % (number of drives) = Drive number
+print(hex2int % 4)  # 2
+\end{minted}
+\end{itemize}
 \end{itemize}
 
 \section{Links}
 \label{sec-5}
 \begin{itemize}
 \item \url{https://gitlab.cee.redhat.com/psachin/bootcamp}
-\item HTML version of this\footnote[1]{Made with Love, LaTeX \& GNU Emacs} doc:
-\url{https://gitlab.cee.redhat.com/psachin/bootcamp/blob/master/2016/scripts/notes.org}
+\item HTML version of this\footnote[1]{Made with Love, \LaTeX, \& GNU Emacs} doc is available at: \newline
+     \url{https://gitlab.cee.redhat.com/psachin/bootcamp/blob/master/2016/scripts/notes.org}
 \item Slides: \url{https://redhat.slides.com/psachin/rhosp-swift-2016}
 \end{itemize}
 % Emacs 25.0.93.1 (Org mode 8.2.10)

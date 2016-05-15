@@ -1,0 +1,25 @@
+sachin@saio:/srv/node1/sdb1$ sudo find . -type f -name "*.data" -exec file {} \; | grep SVG
+
+./objects/845/7ca/d3765bd1c66f0e1996591697ea1817ca/1462960464.83770.data: SVG Scalable Vector Graphics image
+./objects/129/00a/2074750b1363ff5342e7a4cba7e0e00a/1462799594.43034.data: SVG Scalable Vector Graphics image
+./objects/233/b17/3a73b24a9fe27e0691dde1c810a5db17/1463290371.75241.data: SVG Scalable Vector Graphics image
+./objects/190/859/2fb58372293ca0c629fc85b52489c859/1463292608.84881.data: SVG Scalable Vector Graphics image
+
+sachin@saio:/srv/node2/sdb2$ sudo find . -type f -name "*.data" -exec file {} \; | grep SVG
+./objects/845/7ca/d3765bd1c66f0e1996591697ea1817ca/1462960464.83770.data: SVG Scalable Vector Graphics image
+./objects/129/00a/2074750b1363ff5342e7a4cba7e0e00a/1462799594.43034.data: SVG Scalable Vector Graphics image
+./objects/233/b17/3a73b24a9fe27e0691dde1c810a5db17/1463290371.75241.data: SVG Scalable Vector Graphics image
+
+sachin@saio:/srv/node3/sdb3$ sudo find . -type f -name "*.data" -exec file {} \; | grep SVG
+./objects/190/859/2fb58372293ca0c629fc85b52489c859/1463292608.84881.data: SVG Scalable Vector Graphics image
+
+sachin@saio:/srv/node4/sdb4$ sudo find . -type f -name "*.data" -exec file {} \; | grep SVG
+./objects/845/7ca/d3765bd1c66f0e1996591697ea1817ca/1462960464.83770.data: SVG Scalable Vector Graphics image
+./objects/129/00a/2074750b1363ff5342e7a4cba7e0e00a/1462799594.43034.data: SVG Scalable Vector Graphics image
+./objects/233/b17/3a73b24a9fe27e0691dde1c810a5db17/1463290371.75241.data: SVG Scalable Vector Graphics image
+./objects/190/859/2fb58372293ca0c629fc85b52489c859/1463292608.84881.data: SVG Scalable Vector Graphics image
+
+d3765bd1c66f0e1996591697ea1817ca [sdb1, sdb2, sdb4]
+2074750b1363ff5342e7a4cba7e0e00a [sdb1, sdb2, sdb4]
+3a73b24a9fe27e0691dde1c810a5db17 [sdb1, sdb2, sdb4]
+2fb58372293ca0c629fc85b52489c859 [sdb1, sdb3, sdb4]
