@@ -3,6 +3,11 @@ authURL="http://192.168.8.80:8080/auth/v1.0/"
 
 # Get token
 # curl -v \
+#      -H "X-Auth-User: admin:admin" \
+#      -H "X-Auth-Key: admin" \
+#      $authURL
+
+# curl -v \
 #      -H "X-Auth-User: test:tester" \
 #      -H "X-Auth-Key: testing" \
 #      $authURL
@@ -12,12 +17,13 @@ authURL="http://192.168.8.80:8080/auth/v1.0/"
 #      -H "X-Auth-Key: psachin" \
 #      $authURL
 
-token="AUTH_tk907e29d769074551a7b6f4540e9fde0c"
+admin_token="AUTH_tk93e58dc8ee124a95bd9715fd963fd2e3"
 tester_token="AUTH_tka56d8d7e7e4c429088a2f962bbcf47ab"
+psachin_token="AUTH_tk58c201d4adbb46118eb15491b1a679ae"
 
 # Verifying Account Access
 # curl -v \
-#      -H "X-Storage-Token: $token" \
+#      -H "X-Storage-Token: $psachin_token" \
 #      $publicURL
 
 # Creating a container
@@ -26,9 +32,10 @@ tester_token="AUTH_tka56d8d7e7e4c429088a2f962bbcf47ab"
 #      -X PUT $publicURL/keys
 
 # Verifying a container
-curl -v \
-     -H "X-Storage-Token: $tester_token" \
-     -X GET $publicURL/photos
+# curl -v \
+#      -H "X-Storage-Token: $tester_token" \
+#      -X GET $publicURL/photos
+
 
 # # Uploading an object
 # curl -v \
@@ -40,11 +47,12 @@ curl -v \
 #      -H "X-Storage-Token: $token" \
 #      -X GET $publicURL/keys/mykey.pem > mykey.pem
 
+
 # --------------------
 
 # curl -X GET -i  -H  “X-Auth-Token: $TOKEN”  $STORAGE_URL/container1/photo.jpg
 
-#curl -i $publicURL/archive -X PUT -H "Content-length: 0" -H "X-Auth-Token: $token"
+# curl -i $publicURL/archive -X PUT -H "Content-length: 0" -H "X-Auth-Token: $token"
 
 # Create a 'current' container to store current version of an object
 
