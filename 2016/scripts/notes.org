@@ -45,7 +45,7 @@
 ** Handy commands
    - /My settings/:
      - Swift server IP address: \hfill =192.168.8.80:8080=
-     - AutURL: \hfill =http://192.168.8.80:8080/auth/v1.0=
+     - AuthURL: \hfill =http://192.168.8.80:8080/auth/v1.0=
      - PublicURL/StorageURL: \hfill =http://192.168.8.80:8080/v1/AUTH_wasteland=
      - account: \hfill =wasteland=
      - container: \hfill =keys=
@@ -128,8 +128,8 @@
        swift download keys mykey.pem -o mykey2.pem
      #+END_SRC
 
-     - Another way to access swift container/object is to specify
-       username & password directly
+     - Another way to access swift container/object is to provide
+       username & password.
        #+BEGIN_SRC sh
          # swift -U <ACCOUNT>:<USER> -K <PASSWORD> COMMAND
          swift -U wasteland:psachin -K psachin stat -v
@@ -431,10 +431,10 @@
 
    - Managing container's quota
      #+BEGIN_SRC sh
-       # Maximum 2 objects can be create in container 'keys'
+       # Limit maximum of 2 objects in container 'keys'
        swift post -H "X-Container-Meta-Quota-Count: 2" keys
 
-       # Max size of an object is 512 bytes in container 'keys'
+       # Max size of an object should be not more than 512 bytes in container 'keys'
        swift post -H "X-Container-Meta-Quota-Bytes: 512" keys
      #+END_SRC
 
@@ -442,8 +442,8 @@
 
 ** Swift Ring
    - Data structure
-   - Describe your cluster
-   - One ring each for =account=, =container=, =object=
+   - Describes your cluster
+   - One ring each for =account=, =container=, & =object=
      #+BEGIN_SRC sh
        # swift-ring-builder account.builder create <PartitionPower> <Replicas> <MinPartHrs>
 
@@ -459,20 +459,19 @@
      maximum drives I can go up-to is 10.
      #+BEGIN_SRC sh
        # Partition Power
-       2^part_power > (Nos. of drives you think you will have at scale) * 100
+       2^part_power > (Nos. of drives you think you will have at-scale) * 100
 
        # I may have 10 drives in future
        2^part_power > 10 * 100
        2^part_power > 1000
        2^10 > 1000
-       1024 > 1000
+       1024 > 1000  # 2^10 = 1024 just goes above 1000, which is perfect.
      #+END_SRC
 
    - Calculate Partition Power(Python snippet)
      #+BEGIN_SRC python -n
        from math import log2, ceil
-
-       print(ceil(log2(10 * 100)))  # 10
+       print(ceil(log2(10 * 100)))  # 10 <- Partition Power
      #+END_SRC
 
 ** Additional notes
@@ -557,7 +556,7 @@
       swift post -r ".r:*,.rlistings" photos
     #+END_SRC
 
-    \vskip15ex
+    \vskip20ex
 
 - Hashing
   - Swift hashing function
@@ -565,8 +564,8 @@
       # Swift hashing is based on MD5
       # hash(path) = md5(path + per-cluster suffix)
 
-      # Python snippet to know on which drive the object is stored. Say I
-      # have 4 drives
+      # Python snippet to know on which drive the object will be stored,
+      # assuming I have 4 drives
       from hashlib import md5
 
       m = md5()

@@ -1,4 +1,4 @@
-% Created 2016-05-17 Tue 22:51
+% Created 2016-05-18 Wed 09:09
 \documentclass{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -72,7 +72,7 @@ form of \texttt{/account/container/object}.
 \item \emph{My settings}:
 \begin{itemize}
 \item Swift server IP address: \hfill \texttt{192.168.8.80:8080}
-\item AutURL: \hfill \texttt{http://192.168.8.80:8080/auth/v1.0}
+\item AuthURL: \hfill \texttt{http://192.168.8.80:8080/auth/v1.0}
 \item PublicURL/StorageURL: \hfill \texttt{http://192.168.8.80:8080/v1/AUTH\_wasteland}
 \item account: \hfill \texttt{wasteland}
 \item container: \hfill \texttt{keys}
@@ -157,8 +157,8 @@ swift download keys mykey.pem -o mykey2.pem
 \end{minted}
 
 \begin{itemize}
-\item Another way to access swift container/object is to specify
-username \& password directly
+\item Another way to access swift container/object is to provide
+username \& password.
 \begin{minted}[]{sh}
 # swift -U <ACCOUNT>:<USER> -K <PASSWORD> COMMAND
 swift -U wasteland:psachin -K psachin stat -v
@@ -461,10 +461,10 @@ swift post -r ".r:*" current -H "content-length: 0" -H "X-Versions-Location: arc
 
 \item Managing container's quota
 \begin{minted}[]{sh}
-# Maximum 2 objects can be create in container 'keys'
+# Limit maximum of 2 objects in container 'keys'
 swift post -H "X-Container-Meta-Quota-Count: 2" keys
 
-# Max size of an object is 512 bytes in container 'keys'
+# Max size of an object should be not more than 512 bytes in container 'keys'
 swift post -H "X-Container-Meta-Quota-Bytes: 512" keys
 \end{minted}
 
@@ -475,8 +475,8 @@ swift post -H "X-Container-Meta-Quota-Bytes: 512" keys
 \label{sec-3}
 \begin{itemize}
 \item Data structure
-\item Describe your cluster
-\item One ring each for \texttt{account}, \texttt{container}, \texttt{object}
+\item Describes your cluster
+\item One ring each for \texttt{account}, \texttt{container}, \& \texttt{object}
 \begin{minted}[]{sh}
 # swift-ring-builder account.builder create <PartitionPower> <Replicas> <MinPartHrs>
 
@@ -492,20 +492,19 @@ Assume that I have a system with 4 drives right now, but the
 maximum drives I can go up-to is 10.
 \begin{minted}[]{sh}
 # Partition Power
-2^part_power > (Nos. of drives you think you will have at scale) * 100
+2^part_power > (Nos. of drives you think you will have at-scale) * 100
 
 # I may have 10 drives in future
 2^part_power > 10 * 100
 2^part_power > 1000
 2^10 > 1000
-1024 > 1000
+1024 > 1000  # 2^10 = 1024 just goes above 1000, which is perfect.
 \end{minted}
 
 \item Calculate Partition Power(Python snippet)
 \begin{minted}[linenos,firstnumber=1]{python}
 from math import log2, ceil
-
-print(ceil(log2(10 * 100)))  # 10
+print(ceil(log2(10 * 100)))  # 10 <- Partition Power
 \end{minted}
 \end{itemize}
 
@@ -623,7 +622,7 @@ swift post -r ".r:*.welcome.com,.r:-noisy.com" photos
 swift post -r ".r:*,.rlistings" photos
 \end{minted}
 
-\vskip15ex
+\vskip20ex
 \end{itemize}
 
 \item Hashing
@@ -633,8 +632,8 @@ swift post -r ".r:*,.rlistings" photos
 # Swift hashing is based on MD5
 # hash(path) = md5(path + per-cluster suffix)
 
-# Python snippet to know on which drive the object is stored. Say I
-# have 4 drives
+# Python snippet to know on which drive the object will be stored,
+# assuming I have 4 drives
 from hashlib import md5
 
 m = md5()
