@@ -1,4 +1,4 @@
-% Created 2016-05-18 Wed 09:09
+% Created 2016-05-18 Wed 16:27
 \documentclass{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -503,6 +503,7 @@ maximum drives I can go up-to is 10.
 
 \item Calculate Partition Power(Python snippet)
 \begin{minted}[linenos,firstnumber=1]{python}
+# Use python3 interpreter
 from math import log2, ceil
 print(ceil(log2(10 * 100)))  # 10 <- Partition Power
 \end{minted}
@@ -525,7 +526,6 @@ the data to that place.
 
 \section{Slides notes}
 \label{sec-5}
-
 \begin{itemize}
 \item Multiple HDD, where is my data store?
 \item HDD failure
@@ -629,6 +629,7 @@ swift post -r ".r:*,.rlistings" photos
 \begin{itemize}
 \item Swift hashing function
 \begin{minted}[linenos,firstnumber=1]{python}
+# Use python3 interpreter
 # Swift hashing is based on MD5
 # hash(path) = md5(path + per-cluster suffix)
 
