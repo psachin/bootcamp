@@ -9,4 +9,4 @@
       - Archive and current `container`s
     - Please see [[./2016/openstack/ReadMe.org]] for install/usage
       instructions.
-    - Take-away notes: [[https://gitlab.cee.redhat.com/psachin/bootcamp/blob/master/2016/scripts/notes.pdf]]
+    - Take-away notes: [[https://github.com/psachin/bootcamp/blob/master/2016/scripts/notes.pdf]]
