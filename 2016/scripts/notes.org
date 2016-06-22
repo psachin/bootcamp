@@ -13,7 +13,7 @@
 #+LaTeX_HEADER: \usemintedstyle{emacs}
 
 #+LaTeX_HEADER: \renewcommand{\familydefault}{\rmdefault}
-#+LaTeX_HEADER: \usepackage[usenames, dvipsnames]{color}
+#+LaTeX_HEADER: \usepackage[usenames, dvipsnames]{xcolor}
 #+LaTeX_HEADER: \pagenumbering{arabic}
 #+LaTeX_HEADER: \usepackage{hyperref}
 #+LaTeX_HEADER: \hypersetup{colorlinks=true, linkcolor=blue, filecolor=magenta, urlcolor=cyan}
