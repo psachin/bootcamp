@@ -440,6 +440,28 @@
 
      \vskip30ex
 
+** Builder files
+   - Acts as a database
+   - Python pickle
+	 #+BEGIN_SRC python -n
+       import pickle
+       print(pickle.load(open('object.builder')))
+	 #+END_SRC
+   - Ring builder command
+	 #+BEGIN_SRC sh
+     # Account server runs on port 6002
+     swift-ring-builder add account.builder <region><zone>-<IP>:6002/<device><weight>
+     # Container server runs on port 6001
+     swift-ring-builder add container.builder <region><zone>-<IP>:6001/<device><weight>
+     # and the Object server runs on port 6000
+     swift-ring-builder add object.builder <region><zone>-<IP>:6000/<device><weight>
+     swift-ring-builder add object-N.builder <region><zone>-<IP>:6000/<device><weight>
+	 #+END_SRC
+   - Region: Geographical location
+   - Zone: within region isolation
+   - Weight: Relative number of partition a drive will have
+	 - 1TB ~ Weight of 100.0
+	 - 2TB ~ Weight of 200.0..
 ** Swift Ring
    - Data structure
    - Describes your cluster

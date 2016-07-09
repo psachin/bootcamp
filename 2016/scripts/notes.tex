@@ -1,4 +1,4 @@
-% Created 2016-06-22 Wed 16:07
+% Created 2016-07-09 Sat 17:38
 \documentclass{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -189,9 +189,9 @@ export authURL="http://192.168.8.80:8080/auth/v1.0/"
 export publicURL="http://192.168.8.80:8080/v1/AUTH_wasteland"
 
 curl -v \
-     -H "X-Auth-User: wasteland:psachin" \
-     -H "X-Auth-Key: psachin" \
-     $authURL
+	 -H "X-Auth-User: wasteland:psachin" \
+	 -H "X-Auth-Key: psachin" \
+	 $authURL
 
 # *   Trying 192.168.8.80...
 # * Connected to 192.168.8.80 (192.168.8.80) port 8080 (#0)
@@ -218,8 +218,8 @@ export token="AUTH_tk968b0ae7947640be874af6cd897a2b1e"
 
 # Verify account access
 curl -v \
-     -H "X-Storage-Token: $token" \
-     $publicURL
+	 -H "X-Storage-Token: $token" \
+	 $publicURL
 
 # *   Trying 192.168.8.80...
 # * Connected to 192.168.8.80 (192.168.8.80) port 8080 (#0)
@@ -247,8 +247,8 @@ curl -v \
 
 # --- Create a container: 'keys' ---
 curl -v \
-     -H "X-Storage-Token: $token" \
-     -X PUT $publicURL/keys
+	 -H "X-Storage-Token: $token" \
+	 -X PUT $publicURL/keys
 
 # *   Trying 192.168.8.80...
 # * Connected to 192.168.8.80 (192.168.8.80) port 8080 (#0)
@@ -268,8 +268,8 @@ curl -v \
 
 # Verify container
 curl -v \
-     -H "X-Storage-Token: $token" \
-     -X GET $publicURL/keys
+	 -H "X-Storage-Token: $token" \
+	 -X GET $publicURL/keys
 
 # *   Trying 192.168.8.80...
 # * Connected to 192.168.8.80 (192.168.8.80) port 8080 (#0)
@@ -298,8 +298,8 @@ echo "746c1c636cebe7a888fd77688dbfc252" > mykey.pem
 
 # Upload object-'mykey.pem' to container-'keys'
 curl -v \
-     -H "X-Storage-Token: $token" \
-     -X PUT $publicURL/keys/mykey.pem -T mykey.pem
+	 -H "X-Storage-Token: $token" \
+	 -X PUT $publicURL/keys/mykey.pem -T mykey.pem
 
 # *   Trying 192.168.8.80...
 # * Connected to 192.168.8.80 (192.168.8.80) port 8080 (#0)
@@ -325,13 +325,13 @@ curl -v \
 
 # Download an object
 curl -v \
-     -H "X-Storage-Token: $token" \
-     -X GET $publicURL/keys/mykey.pem > mykey.pem
+	 -H "X-Storage-Token: $token" \
+	 -X GET $publicURL/keys/mykey.pem > mykey.pem
 
 # *   Trying 192.168.8.80...
 #   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
 #                                  Dload  Upload   Total   Spent    Left  Speed
-    #   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:-- 0* \
+	#   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:-- 0* \
 #                          Connected to 192.168.8.80 (192.168.8.80) port 8080 (#0)
 # > GET /v1/AUTH_wasteland/keys/mykey.pem HTTP/1.1
 # > Host: 192.168.8.80:8080
@@ -471,8 +471,35 @@ swift post -H "X-Container-Meta-Quota-Bytes: 512" keys
 \vskip30ex
 \end{itemize}
 
-\section{Swift Ring}
+\section{Builder files}
 \label{sec-3}
+\begin{itemize}
+\item Acts as a database
+\item Python pickle
+\begin{minted}[linenos,firstnumber=1]{python}
+import pickle
+print(pickle.load(open('object.builder')))
+\end{minted}
+\item Ring builder command
+\begin{minted}[]{sh}
+# Account server runs on port 6002
+swift-ring-builder add account.builder <region><zone>-<IP>:6002/<device><weight>
+# Container server runs on port 6001
+swift-ring-builder add container.builder <region><zone>-<IP>:6001/<device><weight>
+# and the Object server runs on port 6000
+swift-ring-builder add object.builder <region><zone>-<IP>:6000/<device><weight>
+swift-ring-builder add object-N.builder <region><zone>-<IP>:6000/<device><weight>
+\end{minted}
+\item Region: Geographical location
+\item Zone: within region isolation
+\item Weight: Relative number of partition a drive will have
+\begin{itemize}
+\item 1TB \textasciitilde{} Weight of 100.0
+\item 2TB \textasciitilde{} Weight of 200.0..
+\end{itemize}
+\end{itemize}
+\section{Swift Ring}
+\label{sec-4}
 \begin{itemize}
 \item Data structure
 \item Describes your cluster
@@ -510,7 +537,7 @@ print(ceil(log2(10 * 100)))  # 10 <- Partition Power
 \end{itemize}
 
 \section{Additional notes}
-\label{sec-4}
+\label{sec-5}
 \emph{Swift} consistency processes:
 \begin{itemize}
 \item \emph{Auditor}: Will walk through the storage nodes, read the data and
@@ -525,7 +552,7 @@ the data to that place.
 \end{itemize}
 
 \section{Slides notes}
-\label{sec-5}
+\label{sec-6}
 \begin{itemize}
 \item Multiple HDD, where is my data store?
 \item HDD failure
@@ -652,7 +679,7 @@ print(hex2int % 4)  # 2
 \end{itemize}
 
 \section{Links}
-\label{sec-6}
+\label{sec-7}
 \begin{itemize}
 \item \url{https://gitlab.cee.redhat.com/psachin/bootcamp}
 \item HTML version of this\footnote[1]{Made with Love, \LaTeX, \& GNU Emacs} doc is available at: \newline
