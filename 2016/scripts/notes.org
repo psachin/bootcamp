@@ -603,10 +603,52 @@
       print(hex2int % 4)  # 2
     #+END_SRC
 
+** Swift handoff partitions
+   - How is a handoff partition flagged versus a partition that is
+     marked to be moved during a rebalance?
+
+	 /Answer/ (notmyname): "handoff" is only a thing defined by the
+     results of the call to =get_more_nodes()=. it's not a concept
+     that means anything with regards to rebalancing. ie it's not
+     "flagged" or anything. handoffs are just an ordered walk through
+     the ring
+
+
+   - How should one think of handoff devices?
+
+     /Answer/ (mattoliverau): A hand off device is a non primary node
+     for a certain partition in the ring. Things are placed to hand
+     off nodes when either
+
+	 - there wasn't enough primary nodes to keep it durable.
+     - when write affinity has been set and you want to get your
+       object durability written to a closer region or zone
+     - on a ring rebalance
+
+     When looking for an object (GET) swift will check all primary
+     nodes for the object and then some of the hand off nodes.
+
+     But in essence once on a handoff node, we have durability which
+     is the most important. but if the primaries are busy or down you
+     may not get your object back until swift corrects it self
+
+     The replicators will look at the objects they have, and if its a
+     partition they're a hand off for, becuase they received it cause
+     other primaries where down, or a rebalance suddenly has now
+     suddenly made them a handoff node for a partition, they will
+     replicate it out to the primary nodes and then if successful,
+     delete it.
+
+     handoff nodes + eventual consistancy helps swift keep its awesome
+     durability
+
+
+   - is it (handoff node) meant to be a temporary holding place?
+
+     /Answer/ (mattoliverau): Yeah
+
 ** Links
    - [[https://gitlab.cee.redhat.com/psachin/bootcamp]]
    - HTML version of this\footnote[1]{Made with Love, \LaTeX, \& GNU Emacs} doc is available at: \newline
      https://gitlab.cee.redhat.com/psachin/bootcamp/blob/master/2016/scripts/notes.org
    - Slides: [[https://redhat.slides.com/psachin/rhosp-swift-2016]]
-
-

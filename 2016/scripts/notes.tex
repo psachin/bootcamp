@@ -1,21 +1,19 @@
-% Created 2016-07-09 Sat 17:38
+% Created 2016-11-15 Tue 12:23
 \documentclass{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{fixltx2e}
 \usepackage{graphicx}
+\usepackage{grffile}
 \usepackage{longtable}
-\usepackage{float}
 \usepackage{wrapfig}
 \usepackage{rotating}
 \usepackage[normalem]{ulem}
 \usepackage{amsmath}
 \usepackage{textcomp}
-\usepackage{marvosym}
-\usepackage{wasysym}
 \usepackage{amssymb}
+\usepackage{capt-of}
 \usepackage{hyperref}
-\tolerance=1000
 \usepackage[a4paper, total={6in, 10in}]{geometry}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
@@ -31,15 +29,18 @@
 \date{May 18, 2016}
 \title{Red Hat OpenStack Platform - Swift}
 \hypersetup{
-  pdfkeywords={},
-  pdfsubject={},
-  pdfcreator={Emacs 25.0.95.1 (Org mode 8.2.10)}}
+ pdfauthor={Sachin},
+ pdftitle={Red Hat OpenStack Platform - Swift},
+ pdfkeywords={},
+ pdfsubject={},
+ pdfcreator={Emacs 25.1.1 (Org mode 8.3.6)}, 
+ pdflang={English}}
 \begin{document}
 
 \maketitle
 
 \section{Theory}
-\label{sec-1}
+\label{sec:orgheadline1}
 \begin{itemize}
 \item Swift allows users to store unstructured data(objects) with
 canonical names containing \emph{three} part:
@@ -67,7 +68,7 @@ form of \texttt{/account/container/object}.
 \end{itemize}
 
 \section{Handy commands}
-\label{sec-2}
+\label{sec:orgheadline2}
 \begin{itemize}
 \item \emph{My settings}:
 \begin{itemize}
@@ -472,7 +473,7 @@ swift post -H "X-Container-Meta-Quota-Bytes: 512" keys
 \end{itemize}
 
 \section{Builder files}
-\label{sec-3}
+\label{sec:orgheadline3}
 \begin{itemize}
 \item Acts as a database
 \item Python pickle
@@ -499,7 +500,7 @@ swift-ring-builder add object-N.builder <region><zone>-<IP>:6000/<device><weight
 \end{itemize}
 \end{itemize}
 \section{Swift Ring}
-\label{sec-4}
+\label{sec:orgheadline4}
 \begin{itemize}
 \item Data structure
 \item Describes your cluster
@@ -537,7 +538,7 @@ print(ceil(log2(10 * 100)))  # 10 <- Partition Power
 \end{itemize}
 
 \section{Additional notes}
-\label{sec-5}
+\label{sec:orgheadline5}
 \emph{Swift} consistency processes:
 \begin{itemize}
 \item \emph{Auditor}: Will walk through the storage nodes, read the data and
@@ -552,7 +553,7 @@ the data to that place.
 \end{itemize}
 
 \section{Slides notes}
-\label{sec-6}
+\label{sec:orgheadline6}
 \begin{itemize}
 \item Multiple HDD, where is my data store?
 \item HDD failure
@@ -678,13 +679,64 @@ print(hex2int % 4)  # 2
 \end{itemize}
 \end{itemize}
 
+\section{Swift handoff partitions}
+\label{sec:orgheadline7}
+\begin{itemize}
+\item How is a handoff partition flagged versus a partition that is
+marked to be moved during a rebalance?
+
+\emph{Answer} (notmyname): "handoff" is only a thing defined by the
+results of the call to \texttt{get\_more\_nodes()}. it's not a concept
+that means anything with regards to rebalancing. ie it's not
+"flagged" or anything. handoffs are just an ordered walk through
+the ring
+\end{itemize}
+
+
+\begin{itemize}
+\item How should one think of handoff devices?
+
+\emph{Answer} (mattoliverau): A hand off device is a non primary node
+for a certain partition in the ring. Things are placed to hand
+off nodes when either
+
+\begin{itemize}
+\item there wasn't enough primary nodes to keep it durable.
+\item when write affinity has been set and you want to get your
+object durability written to a closer region or zone
+\item on a ring rebalance
+\end{itemize}
+When looking for an object (GET) swift will check all primary
+nodes for the object and then some of the hand off nodes.
+
+But in essence once on a handoff node, we have durability which
+is the most important. but if the primaries are busy or down you
+may not get your object back until swift corrects it self
+
+The replicators will look at the objects they have, and if its a
+partition they're a hand off for, becuase they received it cause
+other primaries where down, or a rebalance suddenly has now
+suddenly made them a handoff node for a partition, they will
+replicate it out to the primary nodes and then if successful,
+delete it.
+
+handoff nodes + eventual consistancy helps swift keep its awesome
+durability
+\end{itemize}
+
+
+\begin{itemize}
+\item is it (handoff node) meant to be a temporary holding place?
+
+\emph{Answer} (mattoliverau): Yeah
+\end{itemize}
+
 \section{Links}
-\label{sec-7}
+\label{sec:orgheadline8}
 \begin{itemize}
 \item \url{https://gitlab.cee.redhat.com/psachin/bootcamp}
 \item HTML version of this\footnote[1]{Made with Love, \LaTeX, \& GNU Emacs} doc is available at: \newline
      \url{https://gitlab.cee.redhat.com/psachin/bootcamp/blob/master/2016/scripts/notes.org}
 \item Slides: \url{https://redhat.slides.com/psachin/rhosp-swift-2016}
 \end{itemize}
-% Emacs 25.0.95.1 (Org mode 8.2.10)
 \end{document}
