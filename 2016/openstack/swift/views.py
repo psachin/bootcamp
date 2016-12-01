@@ -33,7 +33,7 @@ class SwiftView(ContextMixin, TemplateResponseMixin, View):
         context['year'] = '2016'
         context['title'] = 'Swift'
 
-        srv_ip_addr = '192.168.8.80'
+        srv_ip_addr = '192.168.11.33'
         srv_port = 8080
         publicAuthURL = 'http://' + srv_ip_addr + ':' + str(srv_port) + '/auth/v1.0/'
         publicURL = 'http://' + srv_ip_addr + ':' + str(srv_port) + '/v1/AUTH_test'
@@ -43,7 +43,7 @@ class SwiftView(ContextMixin, TemplateResponseMixin, View):
                                          'X-Auth-Key': 'testing'})
         token = resp.headers['X-Auth-Token']
 
-        current_container = 'current'
+        current_container = 'photos'
         archive_container = 'archive'
 
         resp_current = requests.get(publicURL + "/" + current_container,

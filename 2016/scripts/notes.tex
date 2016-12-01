@@ -1,8 +1,8 @@
-% Created 2016-11-15 Tue 12:23
+% Created 2016-12-01 Thu 18:04
+% Intended LaTeX compiler: pdflatex
 \documentclass{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{fixltx2e}
 \usepackage{graphicx}
 \usepackage{grffile}
 \usepackage{longtable}
@@ -33,14 +33,14 @@
  pdftitle={Red Hat OpenStack Platform - Swift},
  pdfkeywords={},
  pdfsubject={},
- pdfcreator={Emacs 25.1.1 (Org mode 8.3.6)}, 
+ pdfcreator={Emacs 25.1.1 (Org mode 9.0)}, 
  pdflang={English}}
 \begin{document}
 
 \maketitle
 
 \section{Theory}
-\label{sec:orgheadline1}
+\label{sec:org060d295}
 \begin{itemize}
 \item Swift allows users to store unstructured data(objects) with
 canonical names containing \emph{three} part:
@@ -68,7 +68,7 @@ form of \texttt{/account/container/object}.
 \end{itemize}
 
 \section{Handy commands}
-\label{sec:orgheadline2}
+\label{sec:org9620a83}
 \begin{itemize}
 \item \emph{My settings}:
 \begin{itemize}
@@ -473,7 +473,7 @@ swift post -H "X-Container-Meta-Quota-Bytes: 512" keys
 \end{itemize}
 
 \section{Builder files}
-\label{sec:orgheadline3}
+\label{sec:org3eb01b6}
 \begin{itemize}
 \item Acts as a database
 \item Python pickle
@@ -500,7 +500,7 @@ swift-ring-builder add object-N.builder <region><zone>-<IP>:6000/<device><weight
 \end{itemize}
 \end{itemize}
 \section{Swift Ring}
-\label{sec:orgheadline4}
+\label{sec:orge592772}
 \begin{itemize}
 \item Data structure
 \item Describes your cluster
@@ -535,10 +535,38 @@ maximum drives I can go up-to is 10.
 from math import log2, ceil
 print(ceil(log2(10 * 100)))  # 10 <- Partition Power
 \end{minted}
+
+\item Partition in Swift
+
+\begin{minted}[]{sh}
+/srv/2/node/sdb2/objects/171/a56/2ae7be8de859228d6575cc9fe5518a56/1479968148.23926.data
+
+/srv/2/node/sdb2/objects/171 # partition number
+/srv/2/node/sdb2/objects/171/a56 # last 3 chars from hashed objectname
+/srv/2/node/sdb2/objects/171/a56/2ae7be8de859228d6575cc9fe5518a56/ # hashed objectname
+/srv/2/node/sdb2/objects/171/a56/2ae7be8de859228d6575cc9fe5518a56/1479968148 # timestamp
+\end{minted}
+
+\item Swift partition table
 \end{itemize}
 
+
+\begin{center}
+\begin{tabular}{llll}
+ & Replica \# 1 & Replica \# 2 & Replica \#3\\
+\hline
+Partition \# 0 & Device \# 0 & Device \# 3 & Device \# 2\\
+Partition \# 1 & Device \# 1 & Device \# 2 & Device \# 0\\
+Partition \# 2 & Device \# 4 & Device \# 1 & Device \# 3\\
+\end{tabular}
+\end{center}
+
+\begin{center}
+\includegraphics[width=.9\linewidth]{./swift-get-nodes.png}
+\end{center}
+
 \section{Additional notes}
-\label{sec:orgheadline5}
+\label{sec:org53e5582}
 \emph{Swift} consistency processes:
 \begin{itemize}
 \item \emph{Auditor}: Will walk through the storage nodes, read the data and
@@ -553,7 +581,7 @@ the data to that place.
 \end{itemize}
 
 \section{Slides notes}
-\label{sec:orgheadline6}
+\label{sec:orgb62c640}
 \begin{itemize}
 \item Multiple HDD, where is my data store?
 \item HDD failure
@@ -627,11 +655,48 @@ replication process rebalances the data/object
 \item Erasure coding <- Data availability policies
 \begin{itemize}
 \item Based in frequency of access
+\item Example:
+\begin{minted}[]{sh}
+swift post -H "X-Storage-Policy: gold" container_gold
+swift post -H "X-Storage-Policy: silver" container_silver
+swift post -H "X-Storage-Policy: ec42" container_ec42
+
+swift upload container_gold cirros-0.3.4-x86_64-disk.img
+swift upload container_silver cirros-0.3.4-x86_64-disk.img
+swift upload container_ec42 cirros-0.3.4-x86_64-disk.img
+\end{minted}
 \end{itemize}
 \end{itemize}
 
 \item Erasure Codes
 \begin{itemize}
+\item At the time if building a ring for Erasure codes, number of
+replicas are replaced with number of fragments
+
+\begin{minted}[]{sh}
+swift-ring-builder object.builder create 10 6 1
+\end{minted}
+
+where 4 + 2 = 6
+
+4 data fragments
+2 parity data
+
+So that the system can sustain 4 disk failures before the data is
+treated to be lost
+
+\item Erasure coding is implemented in Swift as storage policies
+
+\begin{minted}[]{sh}
+# /etc/swift/swift.conf
+[storage-policy:2]
+name = ec42
+policy_type = erasure_coding
+ec_type = liberasurecode_rs_vand
+ec_num_data_fragments = 4
+ec_num_parity_fragments = 2
+\end{minted}
+
 \item \url{https://www.youtube.com/watch?v=kH3DXMKlEr8}
 \item \url{https://www.youtube.com/watch?v=GDNK1S4FJBQ}
 \end{itemize}
@@ -680,7 +745,7 @@ print(hex2int % 4)  # 2
 \end{itemize}
 
 \section{Swift handoff partitions}
-\label{sec:orgheadline7}
+\label{sec:org665de3e}
 \begin{itemize}
 \item How is a handoff partition flagged versus a partition that is
 marked to be moved during a rebalance?
@@ -732,11 +797,12 @@ durability
 \end{itemize}
 
 \section{Links}
-\label{sec:orgheadline8}
+\label{sec:org069455c}
 \begin{itemize}
 \item \url{https://gitlab.cee.redhat.com/psachin/bootcamp}
 \item HTML version of this\footnote[1]{Made with Love, \LaTeX, \& GNU Emacs} doc is available at: \newline
-     \url{https://gitlab.cee.redhat.com/psachin/bootcamp/blob/master/2016/scripts/notes.org}
+\url{https://gitlab.cee.redhat.com/psachin/bootcamp/blob/master/2016/scripts/notes.org}
 \item Slides: \url{https://redhat.slides.com/psachin/rhosp-swift-2016}
+\item Swift All In One on Fedora: \url{https://github.com/psachin/fedora-saio}
 \end{itemize}
 \end{document}
