@@ -1,5 +1,5 @@
 #+TITLE: Red Hat OpenStack Platform - Swift
-#+DATE: May 18, 2016
+#+DATE: \today
 #+OPTIONS: texht:t
 #+OPTIONS: toc:nil email:t
 #+LATEX_CLASS: article
@@ -148,7 +148,7 @@
          #                   Content-Type: text/plain; charset=utf-8
 
          # Upload an object
-         # swift -U <PASSWORD>:<PASSWORD> -K <PASSWORD> upload <CONTAINER> <file/object>
+         # swift -U <ACCOUNT>:<USER> -K <PASSWORD> upload <CONTAINER> <file/object>
          swift -U wasteland:psachin -K psachin upload keys mykey.pem
        #+END_SRC
    - Managing container and object using APIs(=curl= command)
@@ -664,6 +664,56 @@
       print(hex2int % 4)  # 2
     #+END_SRC
 
+- Account access
+  - Using Python interpreter
+    #+BEGIN_SRC python
+      >>> import swift.common.memcached as mc
+      >>> mc = mc.MemcacheRing(['127.0.01:11211'])
+      >>> mc.get('AUTH_/user/test:tester')
+      u'AUTH_tk8e047f9a96cc48759319b7781ddeb992'
+      >>> mc.get('AUTH_/token/AUTH_tk8e047f9a96cc48759319b7781ddeb992')
+      [1481115804.307723, u'test,test:tester,AUTH_test']
+    #+END_SRC
+
+  - Shell
+	#+BEGIN_SRC sh
+      swift stat -v
+      #     			   StorageURL: http://192.168.11.33:8080/v1/AUTH_test
+      #     			   Auth Token: AUTH_tk8e047f9a96cc48759319b7781ddeb992
+      #     				  Account: AUTH_test
+      #     			   Containers: 27
+      #     				  Objects: 22
+      #                         Bytes: 13328148
+      #   Containers in policy "ec42": 12
+      #      Objects in policy "ec42": 11
+      #        Bytes in policy "ec42": 13288056
+      # Containers in policy "silver": 1
+      #    Objects in policy "silver": 0
+      #      Bytes in policy "silver": 0
+      #   Containers in policy "gold": 14
+      #      Objects in policy "gold": 11
+      #        Bytes in policy "gold": 40092
+      #     			   X-Trans-Id: txb4f4f6812c514fce91f15-005846ebc6
+      #     			  X-Timestamp: 1480517025.85633
+      #                  Content-Type: text/plain; charset=utf-8
+      #                 Accept-Ranges: bytes
+	#+END_SRC
+
+** Object expirer
+
+   - Start object expirer server
+
+	 #+BEGIN_SRC sh
+	   swift-init object-expirer start
+	 #+END_SRC
+
+   - Schedule deletion of object after user deletes the file
+
+	 #+BEGIN_SRC sh
+       swift delete container_gold cirros-0.3.4-x86_64-disk.img -H "X-Delete-After: 120"
+     #+END_SRC
+
+
 ** Swift handoff partitions
    - How is a handoff partition flagged versus a partition that is
      marked to be moved during a rebalance?
@@ -707,6 +757,124 @@
    - is it (handoff node) meant to be a temporary holding place?
 
      /Answer/ (mattoliverau): Yeah
+
+** Swift on OpenStack(RHOSP-8)
+
+   - undercloud
+
+	 Verify swift authentication using below command
+
+	 #+BEGIN_SRC sh
+       [stack@undercloud ~]$ source stackrc
+
+       [stack@undercloud ~]$ swift list
+
+       [stack@undercloud ~]$ swift stat -v
+       #      StorageURL: http://192.0.2.1:8080/v1/AUTH_447097d6f2844cdf9d5d0fa7b8529046
+       #      Auth Token: e117add154fc429f92fba2a00fdbaaf0
+       #         Account: AUTH_447097d6f2844cdf9d5d0fa7b8529046
+       #      Containers: 0
+       #         Objects: 0
+       #      	   Bytes: 0
+       # X-Put-Timestamp: 1481719100.59059
+       #     X-Timestamp: 1481719100.59059
+       #      X-Trans-Id: txd2aa20b0ed084bfc8a059-0058513d3c
+       #     ontent-Type: text/plain; charset=utf-8
+
+       [stack@undercloud ~]$ swift auth -v
+       export OS_IDENTITY_API_VERSION=2.0
+       export OS_AUTH_VERSION=2.0
+       export OS_AUTH_URL=http://192.0.2.1:5000/v2.0
+       export OS_PASSWORD=Redhat01
+       export OS_TENANT_NAME=admin
+       export OS_USERNAME=admin
+	 #+END_SRC
+
+     Password is derived from puppet configs
+
+     #+BEGIN_SRC sh
+       [stack@undercloud:/etc]# grep -r Redhat01 *
+       puppet/hieradata/puppet-stack-config.yaml:heat::keystone::domain::keystone_password: Redhat01
+       puppet/hieradata/puppet-stack-config.yaml:keystone::roles::admin::password: Redhat01
+       puppet/hieradata/puppet-stack-config.yaml:admin_password: Redhat01
+     #+END_SRC
+
+     You will find IP address in =/etc/ironic/ironic.conf=
+
+     #+BEGIN_SRC sh
+       ...
+       my_ip=192.0.2.1
+       ...
+     #+END_SRC
+
+	 Access swift using =curl=
+
+	 - Get *admin* account UUID
+
+	   #+BEGIN_SRC sh
+         [stack@undercloud]$ openstack project list
+         +----------------------------------+---------+
+         | ID                               | Name    |
+         +----------------------------------+---------+
+         | 447097d6f2844cdf9d5d0fa7b8529046 | admin   |
+         | 31f55360edff4a1d81670daf65d720a2 | service |
+         +----------------------------------+---------+
+	   #+END_SRC
+
+	 - Get token
+
+	   #+BEGIN_SRC sh
+         [stack@undercloud]# openstack token issue
+         +------------+----------------------------------+
+         | Field      | Value                            |
+         +------------+----------------------------------+
+         | expires    | 2016-12-14T17:05:37Z             |
+         | id         | 2de6e7295e1b481a9c12b264ace5284c |
+         | project_id | 447097d6f2844cdf9d5d0fa7b8529046 |
+         | user_id    | b62e1dfc83e5479db4c258b31ebb57bb |
+         +------------+----------------------------------+
+	   #+END_SRC
+
+	 - User admin token and UUID to access swift
+
+	   #+BEGIN_SRC sh
+         [stack@undercloud]# curl -v -H "X-Storage-Token: 2de6e7295e1b481a9c12b264ace5284c" \
+       					http://192.0.2.1:8080/v1/AUTH_447097d6f2844cdf9d5d0fa7b8529046
+         ,* About to connect() to 192.0.2.1 port 8080 (#0)
+         ,*   Trying 192.0.2.1...
+         ,* Connected to 192.0.2.1 (192.0.2.1) port 8080 (#0)
+         > GET /v1/AUTH_447097d6f2844cdf9d5d0fa7b8529046 HTTP/1.1
+         > User-Agent: curl/7.29.0
+         > Host: 192.0.2.1:8080
+         > Accept: */*
+         > X-Storage-Token: 2de6e7295e1b481a9c12b264ace5284c
+         >
+         < HTTP/1.1 204 No Content
+         < Content-Type: text/plain; charset=utf-8
+         < X-Account-Object-Count: 0
+         < X-Timestamp: 1481720818.51417
+         < X-Account-Bytes-Used: 0
+         < X-Account-Container-Count: 0
+         < X-Put-Timestamp: 1481720818.51417
+         < Content-Length: 0
+         < X-Trans-Id: tx2aac9d2dbbe443f3aa758-00585143f2
+         < Date: Wed, 14 Dec 2016 13:06:58 GMT
+         <
+         ,* Connection #0 to host 192.0.2.1 left intact
+	   #+END_SRC
+
+
+   - TODO: overcloud
+
+	 #+BEGIN_SRC sh
+       [stack@undercloud-xl420gen9 ~]$ swift auth -v
+       export OS_IDENTITY_API_VERSION=2.0
+       export OS_AUTH_VERSION=2.0
+       export OS_AUTH_URL=http://10.0.0.4:5000/v2.0
+       export OS_PASSWORD=tdr8WZh7vFkDzFdQPdXdzFrft
+       export OS_TENANT_NAME=admin
+       export OS_USERNAME=admin
+	 #+END_SRC
 
 ** Links
    - [[https://gitlab.cee.redhat.com/psachin/bootcamp]]

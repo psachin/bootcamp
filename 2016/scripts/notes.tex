@@ -1,4 +1,4 @@
-% Created 2016-12-01 Thu 18:04
+% Created 2016-12-14 Wed 20:12
 % Intended LaTeX compiler: pdflatex
 \documentclass{article}
 \usepackage[utf8]{inputenc}
@@ -26,7 +26,7 @@
 \hypersetup{colorlinks=true, linkcolor=blue, filecolor=magenta, urlcolor=cyan}
 \urlstyle{same}
 \author{Sachin\thanks{psachin@redhat.com}}
-\date{May 18, 2016}
+\date{\today}
 \title{Red Hat OpenStack Platform - Swift}
 \hypersetup{
  pdfauthor={Sachin},
@@ -40,7 +40,7 @@
 \maketitle
 
 \section{Theory}
-\label{sec:org060d295}
+\label{sec:org87985aa}
 \begin{itemize}
 \item Swift allows users to store unstructured data(objects) with
 canonical names containing \emph{three} part:
@@ -68,7 +68,7 @@ form of \texttt{/account/container/object}.
 \end{itemize}
 
 \section{Handy commands}
-\label{sec:org9620a83}
+\label{sec:org62f9e82}
 \begin{itemize}
 \item \emph{My settings}:
 \begin{itemize}
@@ -178,7 +178,7 @@ swift -U wasteland:psachin -K psachin stat -v
 #                   Content-Type: text/plain; charset=utf-8
 
 # Upload an object
-# swift -U <PASSWORD>:<PASSWORD> -K <PASSWORD> upload <CONTAINER> <file/object>
+# swift -U <ACCOUNT>:<USER> -K <PASSWORD> upload <CONTAINER> <file/object>
 swift -U wasteland:psachin -K psachin upload keys mykey.pem
 \end{minted}
 \end{itemize}
@@ -473,7 +473,7 @@ swift post -H "X-Container-Meta-Quota-Bytes: 512" keys
 \end{itemize}
 
 \section{Builder files}
-\label{sec:org3eb01b6}
+\label{sec:orge52b50b}
 \begin{itemize}
 \item Acts as a database
 \item Python pickle
@@ -500,7 +500,7 @@ swift-ring-builder add object-N.builder <region><zone>-<IP>:6000/<device><weight
 \end{itemize}
 \end{itemize}
 \section{Swift Ring}
-\label{sec:orge592772}
+\label{sec:orgae3dfb0}
 \begin{itemize}
 \item Data structure
 \item Describes your cluster
@@ -566,7 +566,7 @@ Partition \# 2 & Device \# 4 & Device \# 1 & Device \# 3\\
 \end{center}
 
 \section{Additional notes}
-\label{sec:org53e5582}
+\label{sec:orgd231939}
 \emph{Swift} consistency processes:
 \begin{itemize}
 \item \emph{Auditor}: Will walk through the storage nodes, read the data and
@@ -581,7 +581,7 @@ the data to that place.
 \end{itemize}
 
 \section{Slides notes}
-\label{sec:orgb62c640}
+\label{sec:orga1e44e6}
 \begin{itemize}
 \item Multiple HDD, where is my data store?
 \item HDD failure
@@ -742,10 +742,65 @@ print(hex2int)
 print(hex2int % 4)  # 2
 \end{minted}
 \end{itemize}
+
+\item Account access
+\begin{itemize}
+\item Using Python interpreter
+\begin{minted}[]{python}
+>>> import swift.common.memcached as mc
+>>> mc = mc.MemcacheRing(['127.0.01:11211'])
+>>> mc.get('AUTH_/user/test:tester')
+u'AUTH_tk8e047f9a96cc48759319b7781ddeb992'
+>>> mc.get('AUTH_/token/AUTH_tk8e047f9a96cc48759319b7781ddeb992')
+[1481115804.307723, u'test,test:tester,AUTH_test']
+\end{minted}
+
+\item Shell
+\begin{minted}[]{sh}
+swift stat -v
+#     			   StorageURL: http://192.168.11.33:8080/v1/AUTH_test
+#     			   Auth Token: AUTH_tk8e047f9a96cc48759319b7781ddeb992
+#     				  Account: AUTH_test
+#     			   Containers: 27
+#     				  Objects: 22
+#                         Bytes: 13328148
+#   Containers in policy "ec42": 12
+#      Objects in policy "ec42": 11
+#        Bytes in policy "ec42": 13288056
+# Containers in policy "silver": 1
+#    Objects in policy "silver": 0
+#      Bytes in policy "silver": 0
+#   Containers in policy "gold": 14
+#      Objects in policy "gold": 11
+#        Bytes in policy "gold": 40092
+#     			   X-Trans-Id: txb4f4f6812c514fce91f15-005846ebc6
+#     			  X-Timestamp: 1480517025.85633
+#                  Content-Type: text/plain; charset=utf-8
+#                 Accept-Ranges: bytes
+\end{minted}
+\end{itemize}
 \end{itemize}
 
+\section{Object expirer}
+\label{sec:org82c713c}
+
+\begin{itemize}
+\item Start object expirer server
+
+\begin{minted}[]{sh}
+swift-init object-expirer start
+\end{minted}
+
+\item Schedule deletion of object after user deletes the file
+
+\begin{minted}[]{sh}
+swift delete container_gold cirros-0.3.4-x86_64-disk.img -H "X-Delete-After: 120"
+\end{minted}
+\end{itemize}
+
+
 \section{Swift handoff partitions}
-\label{sec:org665de3e}
+\label{sec:org547852c}
 \begin{itemize}
 \item How is a handoff partition flagged versus a partition that is
 marked to be moved during a rebalance?
@@ -796,8 +851,133 @@ durability
 \emph{Answer} (mattoliverau): Yeah
 \end{itemize}
 
+\section{Swift on OpenStack(RHOSP-8)}
+\label{sec:orge29aa9d}
+
+\begin{itemize}
+\item undercloud
+
+Verify swift authentication using below command
+
+\begin{minted}[]{sh}
+[stack@undercloud ~]$ source stackrc
+
+[stack@undercloud ~]$ swift list
+
+[stack@undercloud ~]$ swift stat -v
+#      StorageURL: http://192.0.2.1:8080/v1/AUTH_447097d6f2844cdf9d5d0fa7b8529046
+#      Auth Token: e117add154fc429f92fba2a00fdbaaf0
+#         Account: AUTH_447097d6f2844cdf9d5d0fa7b8529046
+#      Containers: 0
+#         Objects: 0
+#      	   Bytes: 0
+# X-Put-Timestamp: 1481719100.59059
+#     X-Timestamp: 1481719100.59059
+#      X-Trans-Id: txd2aa20b0ed084bfc8a059-0058513d3c
+#     ontent-Type: text/plain; charset=utf-8
+
+[stack@undercloud ~]$ swift auth -v
+export OS_IDENTITY_API_VERSION=2.0
+export OS_AUTH_VERSION=2.0
+export OS_AUTH_URL=http://192.0.2.1:5000/v2.0
+export OS_PASSWORD=Redhat01
+export OS_TENANT_NAME=admin
+export OS_USERNAME=admin
+\end{minted}
+
+Password is derived from puppet configs
+
+\begin{minted}[]{sh}
+[stack@undercloud:/etc]# grep -r Redhat01 *
+puppet/hieradata/puppet-stack-config.yaml:heat::keystone::domain::keystone_password: Redhat01
+puppet/hieradata/puppet-stack-config.yaml:keystone::roles::admin::password: Redhat01
+puppet/hieradata/puppet-stack-config.yaml:admin_password: Redhat01
+\end{minted}
+
+You will find IP address in \texttt{/etc/ironic/ironic.conf}
+
+\begin{minted}[]{sh}
+...
+my_ip=192.0.2.1
+...
+\end{minted}
+
+Access swift using \texttt{curl}
+
+\begin{itemize}
+\item Get \textbf{admin} account UUID
+
+\begin{minted}[]{sh}
+[stack@undercloud]$ openstack project list
++----------------------------------+---------+
+| ID                               | Name    |
++----------------------------------+---------+
+| 447097d6f2844cdf9d5d0fa7b8529046 | admin   |
+| 31f55360edff4a1d81670daf65d720a2 | service |
++----------------------------------+---------+
+\end{minted}
+
+\item Get token
+
+\begin{minted}[]{sh}
+[stack@undercloud]# openstack token issue
++------------+----------------------------------+
+| Field      | Value                            |
++------------+----------------------------------+
+| expires    | 2016-12-14T17:05:37Z             |
+| id         | 2de6e7295e1b481a9c12b264ace5284c |
+| project_id | 447097d6f2844cdf9d5d0fa7b8529046 |
+| user_id    | b62e1dfc83e5479db4c258b31ebb57bb |
++------------+----------------------------------+
+\end{minted}
+
+\item User admin token and UUID to access swift
+
+\begin{minted}[]{sh}
+[stack@undercloud]# curl -v -H "X-Storage-Token: 2de6e7295e1b481a9c12b264ace5284c" \
+			   http://192.0.2.1:8080/v1/AUTH_447097d6f2844cdf9d5d0fa7b8529046
+* About to connect() to 192.0.2.1 port 8080 (#0)
+*   Trying 192.0.2.1...
+* Connected to 192.0.2.1 (192.0.2.1) port 8080 (#0)
+> GET /v1/AUTH_447097d6f2844cdf9d5d0fa7b8529046 HTTP/1.1
+> User-Agent: curl/7.29.0
+> Host: 192.0.2.1:8080
+> Accept: */*
+> X-Storage-Token: 2de6e7295e1b481a9c12b264ace5284c
+>
+< HTTP/1.1 204 No Content
+< Content-Type: text/plain; charset=utf-8
+< X-Account-Object-Count: 0
+< X-Timestamp: 1481720818.51417
+< X-Account-Bytes-Used: 0
+< X-Account-Container-Count: 0
+< X-Put-Timestamp: 1481720818.51417
+< Content-Length: 0
+< X-Trans-Id: tx2aac9d2dbbe443f3aa758-00585143f2
+< Date: Wed, 14 Dec 2016 13:06:58 GMT
+<
+* Connection #0 to host 192.0.2.1 left intact
+\end{minted}
+\end{itemize}
+\end{itemize}
+
+
+\begin{itemize}
+\item TODO: overcloud
+
+\begin{minted}[]{sh}
+[stack@undercloud-xl420gen9 ~]$ swift auth -v
+export OS_IDENTITY_API_VERSION=2.0
+export OS_AUTH_VERSION=2.0
+export OS_AUTH_URL=http://10.0.0.4:5000/v2.0
+export OS_PASSWORD=tdr8WZh7vFkDzFdQPdXdzFrft
+export OS_TENANT_NAME=admin
+export OS_USERNAME=admin
+\end{minted}
+\end{itemize}
+
 \section{Links}
-\label{sec:org069455c}
+\label{sec:org295128e}
 \begin{itemize}
 \item \url{https://gitlab.cee.redhat.com/psachin/bootcamp}
 \item HTML version of this\footnote[1]{Made with Love, \LaTeX, \& GNU Emacs} doc is available at: \newline
