@@ -5,7 +5,7 @@
 #+LATEX_CLASS: article
 #+LATEX_CLASS_OPTIONS:
 #+LATEX_HEADER_EXTRA:
-#+LaTeX_HEADER: \usepackage[a4paper, total={6in, 10in}]{geometry}
+#+LaTeX_HEADER: \usepackage[a4paper, total={7in, 10in}]{geometry}
 #+LaTeX_HEADER: \usepackage[utf8]{inputenc}
 #+LaTeX_HEADER: \usepackage[english]{babel}
 
@@ -22,10 +22,10 @@
 ** Theory
    - Swift allows users to store unstructured data(objects) with
      canonical names containing /three/ part:
-      - =/account=: Think =account= as a storage location and NOT user
-        account. =account= stores meta-data of that account, plus list
-        of all containers in that account. =account= is analogous to
-        =/home= directory which may holds multiple users.
+      - =/account=: Think /account/ as a storage location and NOT user
+        account. /account/ stores meta-data of that account, plus
+        list of all containers in that account. /account/ is analogous
+        to =/home= directory which may holds multiple users.
 
       - =/account/container=: Think of container as a root directory
         of user(analogous to =/home/<USER>/=). Account can have many
@@ -44,9 +44,9 @@
 
 ** Handy commands
    - /My settings/:
-     - Swift server IP address: \hfill =192.168.8.80:8080=
-     - AuthURL: \hfill =http://192.168.8.80:8080/auth/v1.0=
-     - PublicURL/StorageURL: \hfill =http://192.168.8.80:8080/v1/AUTH_wasteland=
+     - Swift server address: \hfill =saio:8080=
+     - AuthURL: \hfill =http://saio:8080/auth/v1.0=
+     - PublicURL/StorageURL: \hfill =http://saio:8080/v1/AUTH_wasteland=
      - account: \hfill =wasteland=
      - container: \hfill =keys=
      - object: \hfill =mykey.pem=
@@ -55,7 +55,7 @@
      =Auth-Token=, & =account= can be fetched using following command,
      #+BEGIN_SRC sh
        swift stat -v
-       #                     StorageURL: http://192.168.8.80:8080/v1/AUTH_wasteland
+       #                     StorageURL: http://saio:8080/v1/AUTH_wasteland
        #                     Auth Token: AUTH_tk968b0ae7947640be874af6cd897a2b1e
        #                        Account: AUTH_wasteland
        #                     Containers: 0
@@ -70,7 +70,6 @@
        #                   Content-Type: text/plain; charset=utf-8
      #+END_SRC
 
-     \vskip15ex
 
    - New user can be added as follows,
      #+BEGIN_SRC sh
@@ -97,7 +96,7 @@
      Set following environmental variables
      #+BEGIN_SRC sh
        # --- ~/.profile ---
-       export ST_AUTH=http://192.168.8.80:8080/auth/v1.0
+       export ST_AUTH=http://saio:8080/auth/v1.0
        export ST_USER=wasteland:psachin
        export ST_KEY=psachin
        # --- File ends here ---
@@ -155,8 +154,8 @@
      #+BEGIN_SRC sh
        # --- Get token ---
        # Set authURL and publicURL
-       export authURL="http://192.168.8.80:8080/auth/v1.0/"
-       export publicURL="http://192.168.8.80:8080/v1/AUTH_wasteland"
+       export authURL="http://saio:8080/auth/v1.0/"
+       export publicURL="http://saio:8080/v1/AUTH_wasteland"
 
        curl -v \
             -H "X-Auth-User: wasteland:psachin" \
@@ -328,11 +327,11 @@
      #+BEGIN_SRC sh
        # Auth related information
        swift auth
-       # export OS_STORAGE_URL=http://192.168.8.80:8080/v1/AUTH_wasteland
+       # export OS_STORAGE_URL=http://saio:8080/v1/AUTH_wasteland
        # export OS_AUTH_TOKEN=AUTH_tkf551ef98eb1e442b9efcef1261d87c64
 
        swift auth -v
-       # export ST_AUTH=http://192.168.8.80:8080/auth/v1.0
+       # export ST_AUTH=http://saio:8080/auth/v1.0
        # export ST_USER=wasteland:psachin
        # export ST_KEY=psachin
 
@@ -429,16 +428,92 @@
        # --- xxx ---
      #+END_SRC
 
+	   - https://www.youtube.com/watch?v=ru2iMJvUZjI
+
+   - Managing account quota
+
+	 - /Note: Write request to metadata entry is only permitted to
+       reseller./ Make sure you have =reseller_admin= group associated
+       with user
+
+	   #+BEGIN_SRC sh
+         # /etc/swift/proxy-server.conf
+         [filter:tempauth]
+         use = egg:swift#tempauth
+         user_admin_admin = admin .admin .reseller_admin
+         user_test_tester = testing .admin .reseller_admin
+         user_test2_tester2 = testing2 .admin
+         user_test_tester3 = testing3
+	   #+END_SRC
+
+	 - Set account quotas
+
+	   #+BEGIN_SRC sh
+         # 10K bytes
+         swift post -m quota-bytes:13000
+         # OR
+         swift post -H "X-Account-Meta-Quota-Bytes:13000"
+
+         # 3 objects
+         swift post -m quota-count:3
+         # OR
+         swift post -H "X-Account-Meta-Quota-Count:3"
+
+
+         swift stat -v
+         #                  StorageURL: http://saio:8080/v1/AUTH_test
+         #                  Auth Token: AUTH_tk665649077fc74fca88eebd7274de17f4
+         #                     Account: AUTH_test
+         #                  Containers: 1
+         #                     Objects: 1
+         #                       Bytes: 83412
+         # Containers in policy "gold": 1
+         #    Objects in policy "gold": 1
+         #      Bytes in policy "gold": 83412
+         #            Meta Quota-Bytes: 13000
+         #            Meta Quota-Count: 3
+         #                  X-Trans-Id: tx491cefe71fa848199480c-00586a834c
+         #      X-Openstack-Request-Id: tx491cefe71fa848199480c-00586a834c
+         #                 X-Timestamp: 1483034243.85889
+         #                Content-Type: text/plain; charset=utf-8
+         #               Accept-Ranges: bytes
+	   #+END_SRC
+
    - Managing container's quota
+
      #+BEGIN_SRC sh
        # Limit maximum of 2 objects in container 'keys'
+       swift post -m quota-count:3 keys
+       # OR
        swift post -H "X-Container-Meta-Quota-Count: 2" keys
 
        # Max size of an object should be not more than 512 bytes in container 'keys'
+       swift post -m quota-count:512 keys
+       # OR
        swift post -H "X-Container-Meta-Quota-Bytes: 512" keys
+
+       swift stat -v keys
+       #                    URL: http://saio:8080/v1/AUTH_test/keys
+       #             Auth Token: AUTH_tk665649077fc74fca88eebd7274de17f4
+       #                Account: AUTH_test
+       #              Container: keys
+       #                Objects: 1
+       #                  Bytes: 83412
+       #               Read ACL:
+       #              Write ACL:
+       #                Sync To:
+       #               Sync Key:
+       #       Meta Quota-Count: 3
+       #       Meta Quota-Bytes: 512
+       #          Last-Modified: Mon, 02 Jan 2017 16:42:27 GMT
+       #          Accept-Ranges: bytes
+       #       X-Storage-Policy: gold
+       #            X-Timestamp: 1483362272.23768
+       #             X-Trans-Id: tx9387af8e677745d18ffe3-00586a82fb
+       # X-Openstack-Request-Id: tx9387af8e677745d18ffe3-00586a82fb
+       #           Content-Type: text/plain; charset=utf-8
      #+END_SRC
 
-     \vskip30ex
 
 ** Builder files
    - Acts as a database
@@ -533,56 +608,12 @@
      data, due to corruption was moved to Quarantine), it will push
      the data to that place.
 
-** Slides notes
-- Multiple HDD, where is my data store?
-- HDD failure
-- Storage problem
-
-- Ownership of your data
-- Access to data, HTTP, FTP, ReST
-  - Mobile, Laptop..
-
-- Swift
-  - loosely tied to storage media
-  - Scalable
-  - Direct client access
-
-
-- Terminology
-  - Proxy: provides API access/ Coordinates requests to storage
-    servers
-  - Account: user namespace
-  - Container: User defined segment of an account(root directory)
-  - Object: Actual data
-
-- Flow
-  Proxy request -> Storage nodes(account, container, obj)
-
-- Data placement
-  - triple replication by default(as unique as possible)
-  - Show Region/Zone pic
-
-- Drive failures
-  1. Umount failing drive
-  2. Replicate/rebalance data
-
-- Server failures
-  1. Network, Power
-  2. New data that is to be written will be placed elsewhere within a
-     cluster/server
-  3. Rebalancing happens
-
-- Currupt data
-  1. Stores checksum of the data with data itself
-  2. Matches checksum of data periodically
-     - If checksum doesnt match, the object is quarantined and the
-       replication process rebalances the data/object
 
 - Storage policies
   - Decide where you want to store data
     - Between swift clusters
     - Subset of hardware
-  - Erasure coding <- Data availability policies
+  - Erasure coding(Data availability policies)
     - Based in frequency of access
 	- Example:
 	  #+BEGIN_SRC sh
@@ -639,8 +670,6 @@
       swift post -r ".r:*,.rlistings" photos
     #+END_SRC
 
-    \vskip20ex
-
 - Hashing
   - Swift hashing function
     #+BEGIN_SRC python -n
@@ -678,7 +707,7 @@
   - Shell
 	#+BEGIN_SRC sh
       swift stat -v
-      #     			   StorageURL: http://192.168.11.33:8080/v1/AUTH_test
+      #     			   StorageURL: http://saio:8080/v1/AUTH_test
       #     			   Auth Token: AUTH_tk8e047f9a96cc48759319b7781ddeb992
       #     				  Account: AUTH_test
       #     			   Containers: 27
@@ -712,7 +741,6 @@
 	 #+BEGIN_SRC sh
        swift delete container_gold cirros-0.3.4-x86_64-disk.img -H "X-Delete-After: 120"
      #+END_SRC
-
 
 ** Swift handoff partitions
    - How is a handoff partition flagged versus a partition that is
@@ -867,7 +895,8 @@
    - TODO: overcloud
 
 	 #+BEGIN_SRC sh
-       [stack@undercloud-xl420gen9 ~]$ swift auth -v
+       [stack@undercloud ~]$ source overcloudrc
+       [stack@undercloud ~]$ swift auth -v
        export OS_IDENTITY_API_VERSION=2.0
        export OS_AUTH_VERSION=2.0
        export OS_AUTH_URL=http://10.0.0.4:5000/v2.0
@@ -875,6 +904,53 @@
        export OS_TENANT_NAME=admin
        export OS_USERNAME=admin
 	 #+END_SRC
+
+** Slides notes
+   - Multiple HDD, where is my data store?
+   - HDD failure
+   - Storage problem
+
+   - Ownership of your data
+   - Access to data, HTTP, FTP, ReST
+   - Mobile, Laptop..
+
+   - Swift
+	 1. loosely tied to storage media
+     2. Scalable
+     3. Direct client access
+
+
+   - Terminology
+	 - Proxy: provides API access/ Coordinates requests to storage servers
+     - Account: user namespace
+     - Container: User defined segment of an account(root directory)
+     - Object: Actual data
+
+   - Flow: Proxy request -> Storage nodes(account, container, obj)
+
+   - Data placement
+	 1. Triple replication by default(as unique as possible)
+     2. Show Region/Zone pic
+
+   - Drive failures
+	 1. Umount failing drive
+     2. Replicate/rebalance data
+
+   - Server failures
+	 1. Network, Power
+	 2. New data that is to be written will be placed elsewhere within a
+		cluster/server
+	 3. Rebalancing happens
+
+   - Currupt data
+	 1. Stores checksum of the data with data itself
+	 2. Matches checksum of data periodically
+		- If checksum doesnt match, the object is quarantined and the
+		  replication process rebalances the data/object
+
+** Todo
+   - Container sync: Sync container(with same name) to other cluster
+	 - http://docs.openstack.org/developer/swift/overview_container_sync.html
 
 ** Links
    - [[https://gitlab.cee.redhat.com/psachin/bootcamp]]

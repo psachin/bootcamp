@@ -1,4 +1,4 @@
-% Created 2016-12-14 Wed 20:12
+% Created 2017-01-02 Mon 14:43
 % Intended LaTeX compiler: pdflatex
 \documentclass{article}
 \usepackage[utf8]{inputenc}
@@ -14,7 +14,7 @@
 \usepackage{amssymb}
 \usepackage{capt-of}
 \usepackage{hyperref}
-\usepackage[a4paper, total={6in, 10in}]{geometry}
+\usepackage[a4paper, total={7in, 10in}]{geometry}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 \usepackage{minted}
@@ -40,15 +40,15 @@
 \maketitle
 
 \section{Theory}
-\label{sec:org87985aa}
+\label{sec:orgfbdcad6}
 \begin{itemize}
 \item Swift allows users to store unstructured data(objects) with
 canonical names containing \emph{three} part:
 \begin{itemize}
-\item \texttt{/account}: Think \texttt{account} as a storage location and NOT user
-account. \texttt{account} stores meta-data of that account, plus list
-of all containers in that account. \texttt{account} is analogous to
-\texttt{/home} directory which may holds multiple users.
+\item \texttt{/account}: Think \emph{account} as a storage location and NOT user
+account. \emph{account} stores meta-data of that account, plus
+list of all containers in that account. \emph{account} is analogous
+to \texttt{/home} directory which may holds multiple users.
 
 \item \texttt{/account/container}: Think of container as a root directory
 of user(analogous to \texttt{/home/<USER>/}). Account can have many
@@ -68,13 +68,13 @@ form of \texttt{/account/container/object}.
 \end{itemize}
 
 \section{Handy commands}
-\label{sec:org62f9e82}
+\label{sec:org9f4f928}
 \begin{itemize}
 \item \emph{My settings}:
 \begin{itemize}
-\item Swift server IP address: \hfill \texttt{192.168.8.80:8080}
-\item AuthURL: \hfill \texttt{http://192.168.8.80:8080/auth/v1.0}
-\item PublicURL/StorageURL: \hfill \texttt{http://192.168.8.80:8080/v1/AUTH\_wasteland}
+\item Swift server address: \hfill \texttt{saio:8080}
+\item AuthURL: \hfill \texttt{http://saio:8080/auth/v1.0}
+\item PublicURL/StorageURL: \hfill \texttt{http://saio:8080/v1/AUTH\_wasteland}
 \item account: \hfill \texttt{wasteland}
 \item container: \hfill \texttt{keys}
 \item object: \hfill \texttt{mykey.pem}
@@ -84,7 +84,7 @@ form of \texttt{/account/container/object}.
 \texttt{Auth-Token}, \& \texttt{account} can be fetched using following command,
 \begin{minted}[]{sh}
 swift stat -v
-#                     StorageURL: http://192.168.8.80:8080/v1/AUTH_wasteland
+#                     StorageURL: http://saio:8080/v1/AUTH_wasteland
 #                     Auth Token: AUTH_tk968b0ae7947640be874af6cd897a2b1e
 #                        Account: AUTH_wasteland
 #                     Containers: 0
@@ -98,9 +98,10 @@ swift stat -v
 #                     X-Trans-Id: tx1fe3ecbeb9f04fdc92287-005735e92c
 #                   Content-Type: text/plain; charset=utf-8
 \end{minted}
+\end{itemize}
 
-\vskip15ex
 
+\begin{itemize}
 \item New user can be added as follows,
 \begin{minted}[]{sh}
 # --- /etc/swift/proxy-server.conf ---
@@ -126,7 +127,7 @@ swift-init proxy restart
 Set following environmental variables
 \begin{minted}[]{sh}
 # --- ~/.profile ---
-export ST_AUTH=http://192.168.8.80:8080/auth/v1.0
+export ST_AUTH=http://saio:8080/auth/v1.0
 export ST_USER=wasteland:psachin
 export ST_KEY=psachin
 # --- File ends here ---
@@ -186,8 +187,8 @@ swift -U wasteland:psachin -K psachin upload keys mykey.pem
 \begin{minted}[]{sh}
 # --- Get token ---
 # Set authURL and publicURL
-export authURL="http://192.168.8.80:8080/auth/v1.0/"
-export publicURL="http://192.168.8.80:8080/v1/AUTH_wasteland"
+export authURL="http://saio:8080/auth/v1.0/"
+export publicURL="http://saio:8080/v1/AUTH_wasteland"
 
 curl -v \
 	 -H "X-Auth-User: wasteland:psachin" \
@@ -359,11 +360,11 @@ curl -v \
 \begin{minted}[]{sh}
 # Auth related information
 swift auth
-# export OS_STORAGE_URL=http://192.168.8.80:8080/v1/AUTH_wasteland
+# export OS_STORAGE_URL=http://saio:8080/v1/AUTH_wasteland
 # export OS_AUTH_TOKEN=AUTH_tkf551ef98eb1e442b9efcef1261d87c64
 
 swift auth -v
-# export ST_AUTH=http://192.168.8.80:8080/auth/v1.0
+# export ST_AUTH=http://saio:8080/auth/v1.0
 # export ST_USER=wasteland:psachin
 # export ST_KEY=psachin
 
@@ -460,20 +461,100 @@ swift post -r ".r:*" current -H "content-length: 0" -H "X-Versions-Location: arc
 # --- xxx ---
 \end{minted}
 
+\begin{itemize}
+\item \url{https://www.youtube.com/watch?v=ru2iMJvUZjI}
+\end{itemize}
+
+\item Managing account quota
+
+\begin{itemize}
+\item \emph{Note: Write request to metadata entry is only permitted to
+reseller.} Make sure you have \texttt{reseller\_admin} group associated
+with user
+
+\begin{minted}[]{sh}
+# /etc/swift/proxy-server.conf
+[filter:tempauth]
+use = egg:swift#tempauth
+user_admin_admin = admin .admin .reseller_admin
+user_test_tester = testing .admin .reseller_admin
+user_test2_tester2 = testing2 .admin
+user_test_tester3 = testing3
+\end{minted}
+
+\item Set account quotas
+
+\begin{minted}[]{sh}
+# 10K bytes
+swift post -m quota-bytes:13000
+# OR
+swift post -H "X-Account-Meta-Quota-Bytes:13000"
+
+# 3 objects
+swift post -m quota-count:3
+# OR
+swift post -H "X-Account-Meta-Quota-Count:3"
+
+
+swift stat -v
+#                  StorageURL: http://saio:8080/v1/AUTH_test
+#                  Auth Token: AUTH_tk665649077fc74fca88eebd7274de17f4
+#                     Account: AUTH_test
+#                  Containers: 1
+#                     Objects: 1
+#                       Bytes: 83412
+# Containers in policy "gold": 1
+#    Objects in policy "gold": 1
+#      Bytes in policy "gold": 83412
+#            Meta Quota-Bytes: 13000
+#            Meta Quota-Count: 3
+#                  X-Trans-Id: tx491cefe71fa848199480c-00586a834c
+#      X-Openstack-Request-Id: tx491cefe71fa848199480c-00586a834c
+#                 X-Timestamp: 1483034243.85889
+#                Content-Type: text/plain; charset=utf-8
+#               Accept-Ranges: bytes
+\end{minted}
+\end{itemize}
+
 \item Managing container's quota
+
 \begin{minted}[]{sh}
 # Limit maximum of 2 objects in container 'keys'
+swift post -m quota-count:3 keys
+# OR
 swift post -H "X-Container-Meta-Quota-Count: 2" keys
 
 # Max size of an object should be not more than 512 bytes in container 'keys'
+swift post -m quota-count:512 keys
+# OR
 swift post -H "X-Container-Meta-Quota-Bytes: 512" keys
-\end{minted}
 
-\vskip30ex
+swift stat -v keys
+#                    URL: http://saio:8080/v1/AUTH_test/keys
+#             Auth Token: AUTH_tk665649077fc74fca88eebd7274de17f4
+#                Account: AUTH_test
+#              Container: keys
+#                Objects: 1
+#                  Bytes: 83412
+#               Read ACL:
+#              Write ACL:
+#                Sync To:
+#               Sync Key:
+#       Meta Quota-Count: 3
+#       Meta Quota-Bytes: 512
+#          Last-Modified: Mon, 02 Jan 2017 16:42:27 GMT
+#          Accept-Ranges: bytes
+#       X-Storage-Policy: gold
+#            X-Timestamp: 1483362272.23768
+#             X-Trans-Id: tx9387af8e677745d18ffe3-00586a82fb
+# X-Openstack-Request-Id: tx9387af8e677745d18ffe3-00586a82fb
+#           Content-Type: text/plain; charset=utf-8
+\end{minted}
 \end{itemize}
 
+
 \section{Builder files}
-\label{sec:orge52b50b}
+\label{sec:org54d6419}
 \begin{itemize}
 \item Acts as a database
 \item Python pickle
@@ -500,7 +581,7 @@ swift-ring-builder add object-N.builder <region><zone>-<IP>:6000/<device><weight
 \end{itemize}
 \end{itemize}
 \section{Swift Ring}
-\label{sec:orgae3dfb0}
+\label{sec:org2e43154}
 \begin{itemize}
 \item Data structure
 \item Describes your cluster
@@ -566,7 +647,7 @@ Partition \# 2 & Device \# 4 & Device \# 1 & Device \# 3\\
 \end{center}
 
 \section{Additional notes}
-\label{sec:orgd231939}
+\label{sec:org1dac3d4}
 \emph{Swift} consistency processes:
 \begin{itemize}
 \item \emph{Auditor}: Will walk through the storage nodes, read the data and
@@ -580,71 +661,8 @@ data, due to corruption was moved to Quarantine), it will push
 the data to that place.
 \end{itemize}
 
-\section{Slides notes}
-\label{sec:orga1e44e6}
-\begin{itemize}
-\item Multiple HDD, where is my data store?
-\item HDD failure
-\item Storage problem
-
-\item Ownership of your data
-\item Access to data, HTTP, FTP, ReST
-\begin{itemize}
-\item Mobile, Laptop..
-\end{itemize}
-
-\item Swift
-\begin{itemize}
-\item loosely tied to storage media
-\item Scalable
-\item Direct client access
-\end{itemize}
-\end{itemize}
-
 
 \begin{itemize}
-\item Terminology
-\begin{itemize}
-\item Proxy: provides API access/ Coordinates requests to storage
-servers
-\item Account: user namespace
-\item Container: User defined segment of an account(root directory)
-\item Object: Actual data
-\end{itemize}
-
-\item Flow
-Proxy request -> Storage nodes(account, container, obj)
-
-\item Data placement
-\begin{itemize}
-\item triple replication by default(as unique as possible)
-\item Show Region/Zone pic
-\end{itemize}
-
-\item Drive failures
-\begin{enumerate}
-\item Umount failing drive
-\item Replicate/rebalance data
-\end{enumerate}
-
-\item Server failures
-\begin{enumerate}
-\item Network, Power
-\item New data that is to be written will be placed elsewhere within a
-cluster/server
-\item Rebalancing happens
-\end{enumerate}
-
-\item Currupt data
-\begin{enumerate}
-\item Stores checksum of the data with data itself
-\item Matches checksum of data periodically
-\begin{itemize}
-\item If checksum doesnt match, the object is quarantined and the
-replication process rebalances the data/object
-\end{itemize}
-\end{enumerate}
-
 \item Storage policies
 \begin{itemize}
 \item Decide where you want to store data
@@ -652,7 +670,7 @@ replication process rebalances the data/object
 \item Between swift clusters
 \item Subset of hardware
 \end{itemize}
-\item Erasure coding <- Data availability policies
+\item Erasure coding(Data availability policies)
 \begin{itemize}
 \item Based in frequency of access
 \item Example:
@@ -714,8 +732,6 @@ swift post -r ".r:*.welcome.com,.r:-noisy.com" photos
 # Enable object listing within a container
 swift post -r ".r:*,.rlistings" photos
 \end{minted}
-
-\vskip20ex
 \end{itemize}
 
 \item Hashing
@@ -758,7 +774,7 @@ u'AUTH_tk8e047f9a96cc48759319b7781ddeb992'
 \item Shell
 \begin{minted}[]{sh}
 swift stat -v
-#     			   StorageURL: http://192.168.11.33:8080/v1/AUTH_test
+#     			   StorageURL: http://saio:8080/v1/AUTH_test
 #     			   Auth Token: AUTH_tk8e047f9a96cc48759319b7781ddeb992
 #     				  Account: AUTH_test
 #     			   Containers: 27
@@ -782,7 +798,7 @@ swift stat -v
 \end{itemize}
 
 \section{Object expirer}
-\label{sec:org82c713c}
+\label{sec:org22a06d4}
 
 \begin{itemize}
 \item Start object expirer server
@@ -798,9 +814,8 @@ swift delete container_gold cirros-0.3.4-x86_64-disk.img -H "X-Delete-After: 120
 \end{minted}
 \end{itemize}
 
-
 \section{Swift handoff partitions}
-\label{sec:org547852c}
+\label{sec:orgf0a98fe}
 \begin{itemize}
 \item How is a handoff partition flagged versus a partition that is
 marked to be moved during a rebalance?
@@ -852,7 +867,7 @@ durability
 \end{itemize}
 
 \section{Swift on OpenStack(RHOSP-8)}
-\label{sec:orge29aa9d}
+\label{sec:orgdb9d675}
 
 \begin{itemize}
 \item undercloud
@@ -966,7 +981,8 @@ Access swift using \texttt{curl}
 \item TODO: overcloud
 
 \begin{minted}[]{sh}
-[stack@undercloud-xl420gen9 ~]$ swift auth -v
+[stack@undercloud ~]$ source overcloudrc
+[stack@undercloud ~]$ swift auth -v
 export OS_IDENTITY_API_VERSION=2.0
 export OS_AUTH_VERSION=2.0
 export OS_AUTH_URL=http://10.0.0.4:5000/v2.0
@@ -976,8 +992,79 @@ export OS_USERNAME=admin
 \end{minted}
 \end{itemize}
 
+\section{Slides notes}
+\label{sec:orgc615039}
+\begin{itemize}
+\item Multiple HDD, where is my data store?
+\item HDD failure
+\item Storage problem
+
+\item Ownership of your data
+\item Access to data, HTTP, FTP, ReST
+\item Mobile, Laptop..
+
+\item Swift
+\begin{enumerate}
+\item loosely tied to storage media
+\item Scalable
+\item Direct client access
+\end{enumerate}
+\end{itemize}
+
+
+\begin{itemize}
+\item Terminology
+\begin{itemize}
+\item Proxy: provides API access/ Coordinates requests to storage servers
+\item Account: user namespace
+\item Container: User defined segment of an account(root directory)
+\item Object: Actual data
+\end{itemize}
+
+\item Flow: Proxy request -> Storage nodes(account, container, obj)
+
+\item Data placement
+\begin{enumerate}
+\item Triple replication by default(as unique as possible)
+\item Show Region/Zone pic
+\end{enumerate}
+
+\item Drive failures
+\begin{enumerate}
+\item Umount failing drive
+\item Replicate/rebalance data
+\end{enumerate}
+
+\item Server failures
+\begin{enumerate}
+\item Network, Power
+\item New data that is to be written will be placed elsewhere within a
+cluster/server
+\item Rebalancing happens
+\end{enumerate}
+
+\item Currupt data
+\begin{enumerate}
+\item Stores checksum of the data with data itself
+\item Matches checksum of data periodically
+\begin{itemize}
+\item If checksum doesnt match, the object is quarantined and the
+replication process rebalances the data/object
+\end{itemize}
+\end{enumerate}
+\end{itemize}
+
+\section{Todo}
+\label{sec:org97441aa}
+\begin{itemize}
+\item Container sync: Sync container(with same name) to other cluster
+\begin{itemize}
+\item \url{http://docs.openstack.org/developer/swift/overview_container_sync.html}
+\end{itemize}
+\end{itemize}
+
 \section{Links}
-\label{sec:org295128e}
+\label{sec:orgf790fe0}
 \begin{itemize}
 \item \url{https://gitlab.cee.redhat.com/psachin/bootcamp}
 \item HTML version of this\footnote[1]{Made with Love, \LaTeX, \& GNU Emacs} doc is available at: \newline
