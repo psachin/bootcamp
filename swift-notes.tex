@@ -1,4 +1,4 @@
-% Created 2017-01-02 Mon 14:43
+% Created 2017-03-27 Mon 11:36
 % Intended LaTeX compiler: pdflatex
 \documentclass{article}
 \usepackage[utf8]{inputenc}
@@ -27,25 +27,25 @@
 \urlstyle{same}
 \author{Sachin\thanks{psachin@redhat.com}}
 \date{\today}
-\title{Red Hat OpenStack Platform - Swift}
+\title{OpenStack Swift Object Storage}
 \hypersetup{
  pdfauthor={Sachin},
- pdftitle={Red Hat OpenStack Platform - Swift},
+ pdftitle={OpenStack Swift Object Storage},
  pdfkeywords={},
  pdfsubject={},
- pdfcreator={Emacs 25.1.1 (Org mode 9.0)}, 
+ pdfcreator={Emacs 26.0.50 (Org mode 9.0.4)}, 
  pdflang={English}}
 \begin{document}
 
 \maketitle
 
 \section{Theory}
-\label{sec:orgfbdcad6}
+\label{sec:orgfe6168d}
 \begin{itemize}
 \item Swift allows users to store unstructured data(objects) with
 canonical names containing \emph{three} part:
 \begin{itemize}
-\item \texttt{/account}: Think \emph{account} as a storage location and NOT user
+\item \texttt{/account}: Think \emph{account} as a storage location and NOT userq
 account. \emph{account} stores meta-data of that account, plus
 list of all containers in that account. \emph{account} is analogous
 to \texttt{/home} directory which may holds multiple users.
@@ -68,7 +68,7 @@ form of \texttt{/account/container/object}.
 \end{itemize}
 
 \section{Handy commands}
-\label{sec:org9f4f928}
+\label{sec:orgfb15d4a}
 \begin{itemize}
 \item \emph{My settings}:
 \begin{itemize}
@@ -138,8 +138,8 @@ Source the file before executing any command
 source ~/.profile
 \end{minted}
 
-\emph{Most of the time, no configuration is needed, if Swift is
-enabled during packstack. You can actually start from here.}
+\emph{If swift is enabled using packstack no configuration is needed.
+You can actually start from here.}
 \begin{minted}[]{sh}
 # --- Create container: 'keys' ---
 swift post keys
@@ -469,8 +469,8 @@ swift post -r ".r:*" current -H "content-length: 0" -H "X-Versions-Location: arc
 
 \begin{itemize}
 \item \emph{Note: Write request to metadata entry is only permitted to
-reseller.} Make sure you have \texttt{reseller\_admin} group associated
-with user
+reseller.} Make sure you(in this case \emph{test} user) have
+\texttt{reseller\_admin} rights.
 
 \begin{minted}[]{sh}
 # /etc/swift/proxy-server.conf
@@ -490,7 +490,7 @@ swift post -m quota-bytes:13000
 # OR
 swift post -H "X-Account-Meta-Quota-Bytes:13000"
 
-# 3 objects
+# 3 objects. Note: This is NOT implemented yet(swift version: 2.12.0)
 swift post -m quota-count:3
 # OR
 swift post -H "X-Account-Meta-Quota-Count:3"
@@ -513,6 +513,12 @@ swift stat -v
 #                 X-Timestamp: 1483034243.85889
 #                Content-Type: text/plain; charset=utf-8
 #               Accept-Ranges: bytes
+
+
+# Remove quota
+swift post -m quota-count:
+# OR
+swift post -H "X-Account-Meta-Quota-Count:"
 \end{minted}
 \end{itemize}
 
@@ -549,12 +555,18 @@ swift stat -v keys
 #             X-Trans-Id: tx9387af8e677745d18ffe3-00586a82fb
 # X-Openstack-Request-Id: tx9387af8e677745d18ffe3-00586a82fb
 #           Content-Type: text/plain; charset=utf-8
+
+
+# Remove container quota
+swift post -m quota-count: keys
+# OR
+swift post -H "X-Container-Meta-Quota-Bytes:" keys
 \end{minted}
 \end{itemize}
 
 
 \section{Builder files}
-\label{sec:org54d6419}
+\label{sec:org2916f67}
 \begin{itemize}
 \item Acts as a database
 \item Python pickle
@@ -581,7 +593,7 @@ swift-ring-builder add object-N.builder <region><zone>-<IP>:6000/<device><weight
 \end{itemize}
 \end{itemize}
 \section{Swift Ring}
-\label{sec:org2e43154}
+\label{sec:orga360d39}
 \begin{itemize}
 \item Data structure
 \item Describes your cluster
@@ -643,11 +655,11 @@ Partition \# 2 & Device \# 4 & Device \# 1 & Device \# 3\\
 \end{center}
 
 \begin{center}
-\includegraphics[width=.9\linewidth]{./swift-get-nodes.png}
+\includegraphics[width=.9\linewidth]{./img/swift-get-nodes.png}
 \end{center}
 
 \section{Additional notes}
-\label{sec:org1dac3d4}
+\label{sec:org53121e1}
 \emph{Swift} consistency processes:
 \begin{itemize}
 \item \emph{Auditor}: Will walk through the storage nodes, read the data and
@@ -688,8 +700,8 @@ swift upload container_ec42 cirros-0.3.4-x86_64-disk.img
 
 \item Erasure Codes
 \begin{itemize}
-\item At the time if building a ring for Erasure codes, number of
-replicas are replaced with number of fragments
+\item When building a ring for Erasure codes, number of replicas are
+replaced with number of fragments
 
 \begin{minted}[]{sh}
 swift-ring-builder object.builder create 10 6 1
@@ -731,6 +743,17 @@ swift post -r ".r:*.welcome.com,.r:-noisy.com" photos
 
 # Enable object listing within a container
 swift post -r ".r:*,.rlistings" photos
+
+# ---xxx---
+# We created tenant(project1) and created account user1 and user2 as
+# member. We applied ACL for container1, container2 to make only user1
+# can access container1 and user2 can access container2. But user1 can
+# access container1 and container2, user2 can access both. We want
+# configure ACL for container to limit each user only can access his
+# container
+
+swift post --read-acl "<project1-id>:<user1-id>" container1
+swift post --read-acl "<project1-id>:<user2-id>" container2
 \end{minted}
 \end{itemize}
 
@@ -798,7 +821,7 @@ swift stat -v
 \end{itemize}
 
 \section{Object expirer}
-\label{sec:org22a06d4}
+\label{sec:orgc86bfb5}
 
 \begin{itemize}
 \item Start object expirer server
@@ -814,8 +837,55 @@ swift delete container_gold cirros-0.3.4-x86_64-disk.img -H "X-Delete-After: 120
 \end{minted}
 \end{itemize}
 
+\section{Temporary URL}
+\label{sec:org157375b}
+
+\begin{itemize}
+\item This allows to share a temporary URL for an object for particular
+period of time.
+
+\begin{minted}[]{sh}
+# Upload object
+swift upload container1 cat.jpg
+swift list container1 --lh
+# 125K 2017-03-27 13:44:48               image/jpeg cat.jpg
+# 125K
+
+swift stat container1  -v
+#                    URL: http://192.168.11.33:8080/v1/AUTH_account1/container1
+#             Auth Token: AUTH_tk9cb82129b5b34fc5876e75e9d0bc3b60
+#                Account: AUTH_account1
+#              Container: container1
+#                Objects: 1
+#                  Bytes: 129006
+#               Read ACL: account1:aone
+#              Write ACL:
+#                Sync To:
+#               Sync Key:
+#          Accept-Ranges: bytes
+#             X-Trans-Id: tx0bb106d0d2164133b7b13-0058d9193f
+#       X-Storage-Policy: gold
+#          Last-Modified: Mon, 27 Mar 2017 13:44:49 GMT
+#            X-Timestamp: 1487354738.54612
+#           Content-Type: text/plain; charset=utf-8
+# X-Openstack-Request-Id: tx0bb106d0d2164133b7b13-0058d9193f
+
+# Create key
+swift post -m "Temp-URL-Key:mykey"
+
+# Generate temp URL which is valid for 30 mins
+swift tempurl GET 1800 http://192.168.11.33:8080/v1/AUTH_account1/container1/cat.jpg mykey
+# http://192.168.11.33:8080/v1/AUTH_account1/container1/cat.jpg?\
+# temp_url_sig=e34606590ec6f0a18e1df52d32d7ec5da74dadd5&temp_url_expires=1490624622
+
+# Download the object
+curl "http://192.168.11.33:8080/v1/AUTH_account1/container1/cat.jpg?\
+temp_url_sig=ff0b580b29b6bacaad0de658b30d2837fed4fb87&temp_url_expires=1490624309" > catty.jpg
+\end{minted}
+\end{itemize}
+
 \section{Swift handoff partitions}
-\label{sec:orgf0a98fe}
+\label{sec:orgf282475}
 \begin{itemize}
 \item How is a handoff partition flagged versus a partition that is
 marked to be moved during a rebalance?
@@ -867,7 +937,7 @@ durability
 \end{itemize}
 
 \section{Swift on OpenStack(RHOSP-8)}
-\label{sec:orgdb9d675}
+\label{sec:org713e3c1}
 
 \begin{itemize}
 \item undercloud
@@ -992,84 +1062,24 @@ export OS_USERNAME=admin
 \end{minted}
 \end{itemize}
 
-\section{Slides notes}
-\label{sec:orgc615039}
-\begin{itemize}
-\item Multiple HDD, where is my data store?
-\item HDD failure
-\item Storage problem
-
-\item Ownership of your data
-\item Access to data, HTTP, FTP, ReST
-\item Mobile, Laptop..
-
-\item Swift
-\begin{enumerate}
-\item loosely tied to storage media
-\item Scalable
-\item Direct client access
-\end{enumerate}
-\end{itemize}
-
-
-\begin{itemize}
-\item Terminology
-\begin{itemize}
-\item Proxy: provides API access/ Coordinates requests to storage servers
-\item Account: user namespace
-\item Container: User defined segment of an account(root directory)
-\item Object: Actual data
-\end{itemize}
-
-\item Flow: Proxy request -> Storage nodes(account, container, obj)
-
-\item Data placement
-\begin{enumerate}
-\item Triple replication by default(as unique as possible)
-\item Show Region/Zone pic
-\end{enumerate}
-
-\item Drive failures
-\begin{enumerate}
-\item Umount failing drive
-\item Replicate/rebalance data
-\end{enumerate}
-
-\item Server failures
-\begin{enumerate}
-\item Network, Power
-\item New data that is to be written will be placed elsewhere within a
-cluster/server
-\item Rebalancing happens
-\end{enumerate}
-
-\item Currupt data
-\begin{enumerate}
-\item Stores checksum of the data with data itself
-\item Matches checksum of data periodically
-\begin{itemize}
-\item If checksum doesnt match, the object is quarantined and the
-replication process rebalances the data/object
-\end{itemize}
-\end{enumerate}
-\end{itemize}
-
 \section{Todo}
-\label{sec:org97441aa}
+\label{sec:orgad23162}
 \begin{itemize}
 \item Container sync: Sync container(with same name) to other cluster
 \begin{itemize}
-\item \url{http://docs.openstack.org/developer/swift/overview_container_sync.html}
+\item \url{http://docs.openstack.org/developer/swift/overview\_container\_sync.html}
 \end{itemize}
 \end{itemize}
 
 \section{Links}
-\label{sec:orgf790fe0}
+\label{sec:org1f9681d}
 \begin{itemize}
-\item \url{https://gitlab.cee.redhat.com/psachin/bootcamp}
+\item \url{https://github.com/psachin/bootcamp}
 \item HTML version of this\footnote[1]{Made with Love, \LaTeX, \& GNU Emacs} doc is available at: \newline
-\url{https://gitlab.cee.redhat.com/psachin/bootcamp/blob/master/2016/scripts/notes.org}
+\url{https://github.com/psachin/bootcamp/blob/master/swift-notes.org}
 \item Slides: \url{https://redhat.slides.com/psachin/rhosp-swift-2016}
-\item Swift All In One on Fedora: \url{https://github.com/psachin/fedora-saio}
+\item SAIO on Fedora: \url{https://github.com/psachin/fedora-saio}
+\item \url{https://github.com/gholt/ring/blob/master/BASIC\_HASH\_RING.md}
+\item \url{http://docs.openstack.org/developer/swift/ring\_background.html}
 \end{itemize}
 \end{document}

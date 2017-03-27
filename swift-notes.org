@@ -1,4 +1,4 @@
-#+TITLE: Red Hat OpenStack Platform - Swift
+#+TITLE: OpenStack Swift Object Storage
 #+DATE: \today
 #+OPTIONS: texht:t
 #+OPTIONS: toc:nil email:t
@@ -22,7 +22,7 @@
 ** Theory
    - Swift allows users to store unstructured data(objects) with
      canonical names containing /three/ part:
-      - =/account=: Think /account/ as a storage location and NOT user
+      - =/account=: Think /account/ as a storage location and NOT userq
         account. /account/ stores meta-data of that account, plus
         list of all containers in that account. /account/ is analogous
         to =/home= directory which may holds multiple users.
@@ -107,8 +107,8 @@
        source ~/.profile
      #+END_SRC
 
-     /Most of the time, no configuration is needed, if Swift is
-     enabled during packstack. You can actually start from here./
+     /If swift is enabled using packstack no configuration is needed.
+     You can actually start from here./
      #+BEGIN_SRC sh
        # --- Create container: 'keys' ---
        swift post keys
@@ -426,6 +426,8 @@
        swift post -r ".r:*" archive -H "content-length: 0"
        swift post -r ".r:*" current -H "content-length: 0" -H "X-Versions-Location: archive"
        # --- xxx ---
+
+
      #+END_SRC
 
 	   - https://www.youtube.com/watch?v=ru2iMJvUZjI
@@ -433,8 +435,8 @@
    - Managing account quota
 
 	 - /Note: Write request to metadata entry is only permitted to
-       reseller./ Make sure you have =reseller_admin= group associated
-       with user
+       reseller./ Make sure you(in this case /test/ user) have
+       =reseller_admin= rights.
 
 	   #+BEGIN_SRC sh
          # /etc/swift/proxy-server.conf
@@ -454,7 +456,7 @@
          # OR
          swift post -H "X-Account-Meta-Quota-Bytes:13000"
 
-         # 3 objects
+         # 3 objects. Note: This is NOT implemented yet(swift version: 2.12.0)
          swift post -m quota-count:3
          # OR
          swift post -H "X-Account-Meta-Quota-Count:3"
@@ -477,6 +479,12 @@
          #                 X-Timestamp: 1483034243.85889
          #                Content-Type: text/plain; charset=utf-8
          #               Accept-Ranges: bytes
+
+
+         # Remove quota
+         swift post -m quota-count:
+         # OR
+         swift post -H "X-Account-Meta-Quota-Count:"
 	   #+END_SRC
 
    - Managing container's quota
@@ -512,6 +520,12 @@
        #             X-Trans-Id: tx9387af8e677745d18ffe3-00586a82fb
        # X-Openstack-Request-Id: tx9387af8e677745d18ffe3-00586a82fb
        #           Content-Type: text/plain; charset=utf-8
+
+
+       # Remove container quota
+       swift post -m quota-count: keys
+       # OR
+       swift post -H "X-Container-Meta-Quota-Bytes:" keys
      #+END_SRC
 
 
@@ -594,7 +608,7 @@
      | Partition # 1 | Device # 1  | Device # 2  | Device # 0 |
      | Partition # 2 | Device # 4  | Device # 1  | Device # 3 |
 
-	 [[./swift-get-nodes.png]]
+	 [[./img/swift-get-nodes.png]]
 
 ** Additional notes
    /Swift/ consistency processes:
@@ -627,8 +641,8 @@
 	  #+END_SRC
 
 - Erasure Codes
-  - At the time if building a ring for Erasure codes, number of
-    replicas are replaced with number of fragments
+  - When building a ring for Erasure codes, number of replicas are
+    replaced with number of fragments
 
 	#+BEGIN_SRC sh
       swift-ring-builder object.builder create 10 6 1
@@ -668,6 +682,17 @@
 
       # Enable object listing within a container
       swift post -r ".r:*,.rlistings" photos
+
+      # ---xxx---
+      # We created tenant(project1) and created account user1 and user2 as
+      # member. We applied ACL for container1, container2 to make only user1
+      # can access container1 and user2 can access container2. But user1 can
+      # access container1 and container2, user2 can access both. We want
+      # configure ACL for container to limit each user only can access his
+      # container
+
+      swift post --read-acl "<project1-id>:<user1-id>" container1
+      swift post --read-acl "<project1-id>:<user2-id>" container2
     #+END_SRC
 
 - Hashing
@@ -740,6 +765,50 @@
 
 	 #+BEGIN_SRC sh
        swift delete container_gold cirros-0.3.4-x86_64-disk.img -H "X-Delete-After: 120"
+     #+END_SRC
+
+** Temporary URL
+
+   - This allows to share a temporary URL for an object for particular
+     period of time.
+
+     #+BEGIN_SRC sh
+       # Upload object
+       swift upload container1 cat.jpg
+       swift list container1 --lh
+       # 125K 2017-03-27 13:44:48               image/jpeg cat.jpg
+       # 125K
+
+       swift stat container1  -v
+       #                    URL: http://192.168.11.33:8080/v1/AUTH_account1/container1
+       #             Auth Token: AUTH_tk9cb82129b5b34fc5876e75e9d0bc3b60
+       #                Account: AUTH_account1
+       #              Container: container1
+       #                Objects: 1
+       #                  Bytes: 129006
+       #               Read ACL: account1:aone
+       #              Write ACL:
+       #                Sync To:
+       #               Sync Key:
+       #          Accept-Ranges: bytes
+       #             X-Trans-Id: tx0bb106d0d2164133b7b13-0058d9193f
+       #       X-Storage-Policy: gold
+       #          Last-Modified: Mon, 27 Mar 2017 13:44:49 GMT
+       #            X-Timestamp: 1487354738.54612
+       #           Content-Type: text/plain; charset=utf-8
+       # X-Openstack-Request-Id: tx0bb106d0d2164133b7b13-0058d9193f
+
+       # Create key
+       swift post -m "Temp-URL-Key:mykey"
+
+       # Generate temp URL which is valid for 30 mins
+       swift tempurl GET 1800 http://192.168.11.33:8080/v1/AUTH_account1/container1/cat.jpg mykey
+       # http://192.168.11.33:8080/v1/AUTH_account1/container1/cat.jpg?\
+       # temp_url_sig=e34606590ec6f0a18e1df52d32d7ec5da74dadd5&temp_url_expires=1490624622
+
+       # Download the object
+       curl "http://192.168.11.33:8080/v1/AUTH_account1/container1/cat.jpg?\
+       temp_url_sig=ff0b580b29b6bacaad0de658b30d2837fed4fb87&temp_url_expires=1490624309" > catty.jpg
      #+END_SRC
 
 ** Swift handoff partitions
@@ -905,56 +974,15 @@
        export OS_USERNAME=admin
 	 #+END_SRC
 
-** Slides notes
-   - Multiple HDD, where is my data store?
-   - HDD failure
-   - Storage problem
-
-   - Ownership of your data
-   - Access to data, HTTP, FTP, ReST
-   - Mobile, Laptop..
-
-   - Swift
-	 1. loosely tied to storage media
-     2. Scalable
-     3. Direct client access
-
-
-   - Terminology
-	 - Proxy: provides API access/ Coordinates requests to storage servers
-     - Account: user namespace
-     - Container: User defined segment of an account(root directory)
-     - Object: Actual data
-
-   - Flow: Proxy request -> Storage nodes(account, container, obj)
-
-   - Data placement
-	 1. Triple replication by default(as unique as possible)
-     2. Show Region/Zone pic
-
-   - Drive failures
-	 1. Umount failing drive
-     2. Replicate/rebalance data
-
-   - Server failures
-	 1. Network, Power
-	 2. New data that is to be written will be placed elsewhere within a
-		cluster/server
-	 3. Rebalancing happens
-
-   - Currupt data
-	 1. Stores checksum of the data with data itself
-	 2. Matches checksum of data periodically
-		- If checksum doesnt match, the object is quarantined and the
-		  replication process rebalances the data/object
-
 ** Todo
    - Container sync: Sync container(with same name) to other cluster
 	 - http://docs.openstack.org/developer/swift/overview_container_sync.html
 
 ** Links
-   - [[https://gitlab.cee.redhat.com/psachin/bootcamp]]
+   - [[https://github.com/psachin/bootcamp]]
    - HTML version of this\footnote[1]{Made with Love, \LaTeX, \& GNU Emacs} doc is available at: \newline
-     https://gitlab.cee.redhat.com/psachin/bootcamp/blob/master/2016/scripts/notes.org
+     https://github.com/psachin/bootcamp/blob/master/swift-notes.org
    - Slides: [[https://redhat.slides.com/psachin/rhosp-swift-2016]]
-   - Swift All In One on Fedora: [[https://github.com/psachin/fedora-saio]]
+   - SAIO on Fedora: [[https://github.com/psachin/fedora-saio]]
+   - https://github.com/gholt/ring/blob/master/BASIC_HASH_RING.md
+   - http://docs.openstack.org/developer/swift/ring_background.html
