@@ -1,4 +1,4 @@
-% Created 2017-03-27 Mon 11:36
+% Created 2017-04-19 Wed 19:22
 % Intended LaTeX compiler: pdflatex
 \documentclass{article}
 \usepackage[utf8]{inputenc}
@@ -40,7 +40,7 @@
 \maketitle
 
 \section{Theory}
-\label{sec:orgfe6168d}
+\label{sec:org9fbbe6b}
 \begin{itemize}
 \item Swift allows users to store unstructured data(objects) with
 canonical names containing \emph{three} part:
@@ -68,7 +68,7 @@ form of \texttt{/account/container/object}.
 \end{itemize}
 
 \section{Handy commands}
-\label{sec:orgfb15d4a}
+\label{sec:org83a222a}
 \begin{itemize}
 \item \emph{My settings}:
 \begin{itemize}
@@ -525,10 +525,10 @@ swift post -H "X-Account-Meta-Quota-Count:"
 \item Managing container's quota
 
 \begin{minted}[]{sh}
-# Limit maximum of 2 objects in container 'keys'
+# Limit maximum of 3 objects in container 'keys'
 swift post -m quota-count:3 keys
 # OR
-swift post -H "X-Container-Meta-Quota-Count: 2" keys
+swift post -H "X-Container-Meta-Quota-Count: 3" keys
 
 # Max size of an object should be not more than 512 bytes in container 'keys'
 swift post -m quota-count:512 keys
@@ -566,7 +566,7 @@ swift post -H "X-Container-Meta-Quota-Bytes:" keys
 
 
 \section{Builder files}
-\label{sec:org2916f67}
+\label{sec:org0ff8182}
 \begin{itemize}
 \item Acts as a database
 \item Python pickle
@@ -593,7 +593,7 @@ swift-ring-builder add object-N.builder <region><zone>-<IP>:6000/<device><weight
 \end{itemize}
 \end{itemize}
 \section{Swift Ring}
-\label{sec:orga360d39}
+\label{sec:org96a7463}
 \begin{itemize}
 \item Data structure
 \item Describes your cluster
@@ -659,7 +659,7 @@ Partition \# 2 & Device \# 4 & Device \# 1 & Device \# 3\\
 \end{center}
 
 \section{Additional notes}
-\label{sec:org53121e1}
+\label{sec:org7380120}
 \emph{Swift} consistency processes:
 \begin{itemize}
 \item \emph{Auditor}: Will walk through the storage nodes, read the data and
@@ -821,7 +821,7 @@ swift stat -v
 \end{itemize}
 
 \section{Object expirer}
-\label{sec:orgc86bfb5}
+\label{sec:orgbc82134}
 
 \begin{itemize}
 \item Start object expirer server
@@ -838,7 +838,7 @@ swift delete container_gold cirros-0.3.4-x86_64-disk.img -H "X-Delete-After: 120
 \end{itemize}
 
 \section{Temporary URL}
-\label{sec:org157375b}
+\label{sec:orgf10100e}
 
 \begin{itemize}
 \item This allows to share a temporary URL for an object for particular
@@ -885,7 +885,7 @@ temp_url_sig=ff0b580b29b6bacaad0de658b30d2837fed4fb87&temp_url_expires=149062430
 \end{itemize}
 
 \section{Swift handoff partitions}
-\label{sec:orgf282475}
+\label{sec:org3b0db06}
 \begin{itemize}
 \item How is a handoff partition flagged versus a partition that is
 marked to be moved during a rebalance?
@@ -937,7 +937,7 @@ durability
 \end{itemize}
 
 \section{Swift on OpenStack(RHOSP-8)}
-\label{sec:org713e3c1}
+\label{sec:org266f440}
 
 \begin{itemize}
 \item undercloud
@@ -1063,7 +1063,7 @@ export OS_USERNAME=admin
 \end{itemize}
 
 \section{Todo}
-\label{sec:orgad23162}
+\label{sec:org8940bcd}
 \begin{itemize}
 \item Container sync: Sync container(with same name) to other cluster
 \begin{itemize}
@@ -1072,7 +1072,7 @@ export OS_USERNAME=admin
 \end{itemize}
 
 \section{Links}
-\label{sec:org1f9681d}
+\label{sec:org4cd01d9}
 \begin{itemize}
 \item \url{https://github.com/psachin/bootcamp}
 \item HTML version of this\footnote[1]{Made with Love, \LaTeX, \& GNU Emacs} doc is available at: \newline

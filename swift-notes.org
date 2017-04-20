@@ -490,10 +490,10 @@
    - Managing container's quota
 
      #+BEGIN_SRC sh
-       # Limit maximum of 2 objects in container 'keys'
+       # Limit maximum of 3 objects in container 'keys'
        swift post -m quota-count:3 keys
        # OR
-       swift post -H "X-Container-Meta-Quota-Count: 2" keys
+       swift post -H "X-Container-Meta-Quota-Count: 3" keys
 
        # Max size of an object should be not more than 512 bytes in container 'keys'
        swift post -m quota-count:512 keys
