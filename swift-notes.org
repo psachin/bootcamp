@@ -18,6 +18,7 @@
 #+LaTeX_HEADER: \usepackage{hyperref}
 #+LaTeX_HEADER: \hypersetup{colorlinks=true, linkcolor=blue, filecolor=magenta, urlcolor=cyan}
 #+LaTeX_HEADER: \urlstyle{same}
+#+LaTeX_HEADER: \usepackage{attachfile}
 
 ** Theory
    - Swift allows users to store unstructured data(objects) with
@@ -130,25 +131,25 @@
      - Another way to access swift container/object is to provide
        username & password.
        #+BEGIN_SRC sh
-         # swift -U <ACCOUNT>:<USER> -K <PASSWORD> COMMAND
-         swift -U wasteland:psachin -K psachin stat -v
-         #                     StorageURL: http://saio:8080/v1/AUTH_wasteland
-         #                     Auth Token: AUTH_tkf551ef98eb1e442b9efcef1261d87c64
-         #                        Account: AUTH_wasteland
-         #                     Containers: 1
-         #                        Objects: 0
-         #                          Bytes: 0
-         # Containers in policy "default": 1
-         #    Objects in policy "default": 0
-         #      Bytes in policy "default": 0
-         #                  Accept-Ranges: bytes
-         #                    X-Timestamp: 1463292608.77517
-         #                     X-Trans-Id: txc8bc7ba0659b497fb170f-00573b0ff4
-         #                   Content-Type: text/plain; charset=utf-8
+	 # swift -U <ACCOUNT>:<USER> -K <PASSWORD> COMMAND
+	 swift -U wasteland:psachin -K psachin -A http://saio:8080/auth/v1.0 stat -v
+	 #                     StorageURL: http://saio:8080/v1/AUTH_wasteland
+	 #                     Auth Token: AUTH_tkf551ef98eb1e442b9efcef1261d87c64
+	 #                        Account: AUTH_wasteland
+	 #                     Containers: 1
+	 #                        Objects: 0
+	 #                          Bytes: 0
+	 # Containers in policy "default": 1
+	 #    Objects in policy "default": 0
+	 #      Bytes in policy "default": 0
+	 #                  Accept-Ranges: bytes
+	 #                    X-Timestamp: 1463292608.77517
+	 #                     X-Trans-Id: txc8bc7ba0659b497fb170f-00573b0ff4
+	 #                   Content-Type: text/plain; charset=utf-8
 
-         # Upload an object
-         # swift -U <ACCOUNT>:<USER> -K <PASSWORD> upload <CONTAINER> <file/object>
-         swift -U wasteland:psachin -K psachin upload keys mykey.pem
+	 # Upload an object
+	 # swift -U <ACCOUNT>:<USER> -K <PASSWORD> upload <CONTAINER> <file/object>
+	 swift -U wasteland:psachin -K psachin -A http://saio:8080/auth/v1.0 upload keys mykey.pem
        #+END_SRC
    - Managing container and object using APIs(=curl= command)
      #+BEGIN_SRC sh
@@ -552,9 +553,9 @@
 	 - 1TB ~ Weight of 100.0
 	 - 2TB ~ Weight of 200.0..
 ** Swift Ring
-   - Data structure
-   - Describes your cluster
-   - One ring each for =account=, =container=, & =object=
+   - Swift ring is basically a data structure which describes your
+     swift cluster
+   - There's one ring each for =account=, =container=, & =object=
      #+BEGIN_SRC sh
        # swift-ring-builder account.builder create <PartitionPower> <Replicas> <MinPartHrs>
 
@@ -588,27 +589,34 @@
 
    - Partition in Swift
 
-	 #+BEGIN_SRC sh
+     #+BEGIN_SRC sh
        /srv/2/node/sdb2/objects/171/a56/2ae7be8de859228d6575cc9fe5518a56/1479968148.23926.data
 
        /srv/2/node/sdb2/objects/171 # partition number
        /srv/2/node/sdb2/objects/171/a56 # last 3 chars from hashed objectname
        /srv/2/node/sdb2/objects/171/a56/2ae7be8de859228d6575cc9fe5518a56/ # hashed objectname
        /srv/2/node/sdb2/objects/171/a56/2ae7be8de859228d6575cc9fe5518a56/1479968148 # timestamp
-	 #+END_SRC
+     #+END_SRC
 
    - Swift partition table
 
      #+ATTR_LaTeX: :align |c|c|c|c|
 
 
-     |               | Replica # 1 | Replica # 2 | Replica #3 |
-     |---------------+-------------+-------------+------------|
-     | Partition # 0 | Device # 0  | Device # 3  | Device # 2 |
-     | Partition # 1 | Device # 1  | Device # 2  | Device # 0 |
-     | Partition # 2 | Device # 4  | Device # 1  | Device # 3 |
+     |               | Replica # 3 | Replica # 2 | Replica # 1 |
+     |---------------+-------------+-------------+-------------|
+     | Partition # 1 | Device # 2  | Device # 3  | Device # 4  |
+     | Partition # 2 | Device # 3  | Device # 4  | Device # 5  |
+     | Partition # 3 | Device # 4  | Device # 5  | Device # 6  |
+     | Partition # 4 | Device # 5  | Device # 6  | Device # 7  |
+     | Partition # 5 | Device # 6  | Device # 7  | Device # 8  |
+     | Partition # 6 | Device # 7  | Device # 8  | Device # 1  |
+     | Partition # 7 | Device # 8  | Device # 1  | Device # 2  |
+     | Partition # 8 | Device # 1  | Device # 2  | Device # 3  |
 
-	 [[./img/swift-get-nodes.png]]
+
+     Table showing 3 replicas, 8 partition
+     [[./img/swift-get-nodes.png]]
 
 ** Additional notes
    /Swift/ consistency processes:
@@ -629,16 +637,16 @@
     - Subset of hardware
   - Erasure coding(Data availability policies)
     - Based in frequency of access
-	- Example:
-	  #+BEGIN_SRC sh
-        swift post -H "X-Storage-Policy: gold" container_gold
-        swift post -H "X-Storage-Policy: silver" container_silver
-        swift post -H "X-Storage-Policy: ec42" container_ec42
+      - Example:
+	#+BEGIN_SRC sh
+      swift post -H "X-Storage-Policy: gold" container_gold
+      swift post -H "X-Storage-Policy: silver" container_silver
+      swift post -H "X-Storage-Policy: ec42" container_ec42
 
-        swift upload container_gold cirros-0.3.4-x86_64-disk.img
-        swift upload container_silver cirros-0.3.4-x86_64-disk.img
-        swift upload container_ec42 cirros-0.3.4-x86_64-disk.img
-	  #+END_SRC
+      swift upload container_gold cirros-0.3.4-x86_64-disk.img
+      swift upload container_silver cirros-0.3.4-x86_64-disk.img
+      swift upload container_ec42 cirros-0.3.4-x86_64-disk.img
+	#+END_SRC
 
 - Erasure Codes
   - When building a ring for Erasure codes, number of replicas are
@@ -695,6 +703,90 @@
       swift post --read-acl "<project1-id>:<user2-id>" container2
     #+END_SRC
 
+- =staticweb= middleware(with example)
+
+  Swift is capable of serving static content. Following example shows
+  how to display container listing using basic HTML template
+  - Make sure you have =staticweb= middleware loaded in =pipeline=,
+    and filter
+    #+BEGIN_SRC sh
+      [pipeline:main]
+      # Yes, proxy-logging appears twice. This is so that
+      # middleware-originated requests get logged too.
+      pipeline = catch_errors gatekeeper healthcheck proxy-logging cache bulk tempurl ratelimit crossdomain container_sync tempauth staticweb copy container-quotas account-quotas slo dlo versioned_writes proxy-logging proxy-server
+
+      [filter:staticweb]
+      use = egg:swift#staticweb
+    #+END_SRC
+
+  - Now create a directory =photos= with following heirarchy
+    #+BEGIN_SRC sh -n
+      $ ls -R
+      .:
+      all  cats  dogs  index.html  swan.jpg
+
+      ./all:
+      cat.jpg  catty.jpg  dog.png  swan.jpg
+
+      ./cats:
+      cat.jpg  catty.jpg
+
+      ./dogs:
+      dog.png
+    #+END_SRC
+
+  - Optionally you can create an =index.html= in path
+    =photos/index.html=. A single page listing all content
+    #+BEGIN_SRC html
+      <a href=swan.jpg>swan.jpg</a> </br>
+      <a href=dogs/dog.png>dogs/dog.png</a> </br>
+      <a href=cats/cat.jpg>cats/cat.jpg</a> </br>
+      <a href=cats/catty.jpg>cats/catty.jpg</a>
+    #+END_SRC
+
+  - Now create a container =photos= with =Web-Listings= & =Web-Index=
+    headers. Also make sure enable read access and listing,
+    #+BEGIN_SRC sh
+      $ swift post -r ".r:*,.rlistings" -m "web-index:index.html" -m "web-listings: true" photos
+
+      $ swift stat photos
+		     Account: AUTH_test
+		   Container: photos
+		     Objects: 0
+		       Bytes: 0
+		    Read ACL: .r:*,.rlistings
+		   Write ACL:
+		     Sync To:
+		    Sync Key:
+	   Meta Web-Listings: true
+	      Meta Web-Index: index.html
+	       Accept-Ranges: bytes
+		  X-Trans-Id: txd328ff3b97924d88bd7d8-005a98fc27
+	    X-Storage-Policy: gold
+	       Last-Modified: Fri, 02 Mar 2018 07:24:10 GMT
+		 X-Timestamp: 1480594187.54057
+		Content-Type: text/plain; charset=utf-8
+      X-Openstack-Request-Id: txd328ff3b97924d88bd7d8-005a98fc27
+    #+END_SRC
+
+  - Upload content
+    #+BEGIN_SRC sh
+      cd photos
+      swift upload photos *
+    #+END_SRC
+
+  - Finally visit the container in a web-browser and you should see
+    something like below
+
+    (Container with =index.html=)
+    [[./img/container_listing.png]]
+
+    (Container without =index.html=)
+    [[./img/container_listing_without_html.png]]
+
+    (A Cat object)
+    [[./img/container_listing_a_cat_object.png]]
+
 - Hashing
   - Swift hashing function
     #+BEGIN_SRC python -n
@@ -730,13 +822,13 @@
     #+END_SRC
 
   - Shell
-	#+BEGIN_SRC sh
+    #+BEGIN_SRC sh
       swift stat -v
-      #     			   StorageURL: http://saio:8080/v1/AUTH_test
-      #     			   Auth Token: AUTH_tk8e047f9a96cc48759319b7781ddeb992
-      #     				  Account: AUTH_test
-      #     			   Containers: 27
-      #     				  Objects: 22
+      #                    StorageURL: http://saio:8080/v1/AUTH_test
+      #                    Auth Token: AUTH_tk8e047f9a96cc48759319b7781ddeb992
+      #                       Account: AUTH_test
+      #                    Containers: 27
+      #                       Objects: 22
       #                         Bytes: 13328148
       #   Containers in policy "ec42": 12
       #      Objects in policy "ec42": 11
@@ -747,23 +839,23 @@
       #   Containers in policy "gold": 14
       #      Objects in policy "gold": 11
       #        Bytes in policy "gold": 40092
-      #     			   X-Trans-Id: txb4f4f6812c514fce91f15-005846ebc6
-      #     			  X-Timestamp: 1480517025.85633
+      #                    X-Trans-Id: txb4f4f6812c514fce91f15-005846ebc6
+      #                   X-Timestamp: 1480517025.85633
       #                  Content-Type: text/plain; charset=utf-8
       #                 Accept-Ranges: bytes
-	#+END_SRC
+    #+END_SRC
 
 ** Object expirer
 
    - Start object expirer server
 
-	 #+BEGIN_SRC sh
-	   swift-init object-expirer start
-	 #+END_SRC
+     #+BEGIN_SRC sh
+       swift-init object-expirer start
+     #+END_SRC
 
    - Schedule deletion of object after user deletes the file
 
-	 #+BEGIN_SRC sh
+     #+BEGIN_SRC sh
        swift delete container_gold cirros-0.3.4-x86_64-disk.img -H "X-Delete-After: 120"
      #+END_SRC
 
@@ -803,12 +895,28 @@
 
        # Generate temp URL which is valid for 30 mins
        swift tempurl GET 1800 http://192.168.11.33:8080/v1/AUTH_account1/container1/cat.jpg mykey
-       # http://192.168.11.33:8080/v1/AUTH_account1/container1/cat.jpg?\
-       # temp_url_sig=e34606590ec6f0a18e1df52d32d7ec5da74dadd5&temp_url_expires=1490624622
+       # Output:
+       # http://192.168.11.33:8080/v1/AUTH_account1/container1/cat.jpg?temp_url_sig=e34606590ec6f0a18e1df52d32d7ec5da74dadd5&temp_url_expires=1490624622
 
        # Download the object
-       curl "http://192.168.11.33:8080/v1/AUTH_account1/container1/cat.jpg?\
-       temp_url_sig=ff0b580b29b6bacaad0de658b30d2837fed4fb87&temp_url_expires=1490624309" > catty.jpg
+       curl "http://192.168.11.33:8080/v1/AUTH_account1/container1/cat.jpg?temp_url_sig=ff0b580b29b6bacaad0de658b30d2837fed4fb87&temp_url_expires=1490624309" > catty.jpg
+
+
+       # Use PUT with tempurl
+       swift tempurl PUT 900000 http://192.168.11.33:8080/v1/AUTH_test/photos/cat.jpg mykey
+       # Output:
+       # http://192.168.11.33:8080/v1/AUTH_test/photos/cat.jpg?temp_url_sig=8dfd2243ba46836c19e360513dc007391f73ca2e&\temp_url_expires=1502741120
+
+       curl -X PUT "http://192.168.11.33:8080/v1/AUTH_test/photos/cat.jpg?temp_url_sig=8dfd2243ba46836c19e360513dc007391f73ca2e&temp_url_expires=1502741120" --data-binary catty.jpg
+
+       curl -X PUT "http://192.168.11.33:8080/v1/AUTH_test/photos/cat.jpg?temp_url_sig=8dfd2243ba46836c19e360513dc007391f73ca2e&temp_url_expires=1502741120" --write-out 201 --data-binary catty.jpg
+       # Output:
+       # 201
+
+       export http_code=201
+       curl -X PUT "http://192.168.11.33:8080/v1/AUTH_test/photos/cat.jpg?temp_url_sig=8dfd2243ba46836c19e360513dc007391f73ca2e&temp_url_expires=1502741120" --write-out %{http_code} --data-binary catty.jpg
+       # Output:
+       # 201
      #+END_SRC
 
 ** Swift handoff partitions
@@ -986,3 +1094,5 @@
    - SAIO on Fedora: [[https://github.com/psachin/fedora-saio]]
    - https://github.com/gholt/ring/blob/master/BASIC_HASH_RING.md
    - http://docs.openstack.org/developer/swift/ring_background.html
+
+@@latex:\attachfile[icon=Paperclip]{swift-notes.org}@@

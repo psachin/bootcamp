@@ -3,12 +3,15 @@
   This repo holds all bootcamp related projects, links and docs.
 
 ** 2016
-*** Red Hat OpenStack: Swift
+*** OpenStack: Swift object storage
     - Django web application to demonstrate:
-      - Access to swift objects
-      - `Archive` and `current` containers
+      - Access to swift objects & containers
+      - Object versioning
     - Please see [[./2016/openstack/ReadMe.org]] for install/usage
       instructions.
 
-** Take-away notes
-   - [[https://github.com/psachin/bootcamp/blob/master/swift-notes.pdf]]
+*** Take-away notes
+    - [[https://github.com/psachin/bootcamp/blob/master/swift-notes.pdf]]
+
+*** YouTube
+    - [[https://www.youtube.com/watch?v=ru2iMJvUZjI][Swift: Object versioning in action]]
