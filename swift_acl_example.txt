@@ -1,0 +1,113 @@
+vagrant@saio:$ swift auth -v
+export ST_AUTH=http://192.168.11.33:8080/auth/v1.0
+export ST_USER=admin:admin
+export ST_KEY=admin
+
+vagrant@saio:$ swift post --read-acl "test:tester" container1
+vagrant@saio:$ swift post --read-acl "test:tester3" container2
+
+vagrant@saio:$ swift stat container1
+               Account: AUTH_admin
+             Container: container1
+               Objects: 0
+                 Bytes: 0
+              Read ACL: test:tester
+             Write ACL:
+               Sync To:
+              Sync Key:
+         Accept-Ranges: bytes
+            X-Trans-Id: txe28906ef8ef54dc7b12bb-0058a73346
+      X-Storage-Policy: gold
+         Last-Modified: Fri, 17 Feb 2017 17:30:26 GMT
+           X-Timestamp: 1487352597.22018
+          Content-Type: text/plain; charset=utf-8
+X-Openstack-Request-Id: txe28906ef8ef54dc7b12bb-0058a73346
+
+
+vagrant@saio:$ swift stat container2
+               Account: AUTH_admin
+             Container: container2
+               Objects: 0
+                 Bytes: 0
+              Read ACL: test:tester3
+             Write ACL:
+               Sync To:
+              Sync Key:
+         Accept-Ranges: bytes
+            X-Trans-Id: tx1c4acadd49f14a1ca76f5-0058a7334a
+      X-Storage-Policy: gold
+         Last-Modified: Fri, 17 Feb 2017 17:30:35 GMT
+           X-Timestamp: 1487352634.74064
+          Content-Type: text/plain; charset=utf-8
+X-Openstack-Request-Id: tx1c4acadd49f14a1ca76f5-0058a7334a
+
+
+swift auth -v
+export ST_AUTH=http://192.168.11.33:8080/auth/v1.0
+export ST_USER=test:tester
+export ST_KEY=testing
+
+
+vagrant@saio:$ swift upload container1 obj1.txt 
+obj1.txt
+
+vagrant@saio:$ swift upload container2 obj1.txt 
+obj1.txt
+
+vagrant@saio:$ swift auth -v
+export ST_AUTH=http://192.168.11.33:8080/auth/v1.0
+export ST_USER=admin:admin
+export ST_KEY=admin
+
+
+vagrant@saio:$ swift stat container2 obj1.txt
+Object HEAD failed: http://192.168.11.33:8080/v1/AUTH_admin/container2/obj1.txt 404 Not Found
+Failed Transaction ID: tx4608cd9bb0a144d983850-0058a733e0
+
+{Fri-Feb-17-2017,17:33:20}
+[~]-(5 dirs, 5 files)
+vagrant@saio:$ swift stat container2 obj1.txt
+Object HEAD failed: http://192.168.11.33:8080/v1/AUTH_admin/container2/obj1.txt 404 Not Found
+Failed Transaction ID: tx0b77d800ac06494f9aed7-0058a733e6
+
+{Fri-Feb-17-2017,17:33:26}
+[~]-(5 dirs, 5 files)
+vagrant@saio:$ swift stat container2 
+               Account: AUTH_admin
+             Container: container2
+               Objects: 0
+                 Bytes: 0
+              Read ACL: test:tester3
+             Write ACL:
+               Sync To:
+              Sync Key:
+         Accept-Ranges: bytes
+            X-Trans-Id: tx9a94f930dd9b406291d11-0058a733ea
+      X-Storage-Policy: gold
+         Last-Modified: Fri, 17 Feb 2017 17:30:35 GMT
+           X-Timestamp: 1487352634.74064
+          Content-Type: text/plain; charset=utf-8
+X-Openstack-Request-Id: tx9a94f930dd9b406291d11-0058a733ea
+
+{Fri-Feb-17-2017,17:33:30}
+[~]-(5 dirs, 5 files)
+vagrant@saio:$ swift stat container1
+               Account: AUTH_admin
+             Container: container1
+               Objects: 0
+                 Bytes: 0
+              Read ACL: test:tester
+             Write ACL:
+               Sync To:
+              Sync Key:
+         Accept-Ranges: bytes
+            X-Trans-Id: tx5d43b73842c24180a3bb5-0058a733f5
+      X-Storage-Policy: gold
+         Last-Modified: Fri, 17 Feb 2017 17:30:26 GMT
+           X-Timestamp: 1487352597.22018
+          Content-Type: text/plain; charset=utf-8
+X-Openstack-Request-Id: tx5d43b73842c24180a3bb5-0058a733f5
+
+
+
+

@@ -23,7 +23,7 @@
 ** Theory
    - Swift allows users to store unstructured data(objects) with
      canonical names containing /three/ part:
-      - =/account=: Think /account/ as a storage location and NOT userq
+      - =/account=: Think /account/ as a storage location and NOT user's
         account. /account/ stores meta-data of that account, plus
         list of all containers in that account. /account/ is analogous
         to =/home= directory which may holds multiple users.
@@ -108,7 +108,7 @@
        source ~/.profile
      #+END_SRC
 
-     /If swift is enabled using packstack no configuration is needed.
+     /If swift is enabled using Packstack no configuration is needed.
      You can actually start from here./
      #+BEGIN_SRC sh
        # --- Create container: 'keys' ---
@@ -343,7 +343,7 @@
        swift stat [container]
        swift stat [container] [object]
 
-       # Retrive capability of proxy
+       # Retrieve capability of proxy
        swift capabilities
        # Core: swift
        #  Options:
@@ -396,7 +396,7 @@
        swift list --lh [container]
      #+END_SRC
 
-   - Object versioning
+   - Object versioning (https://www.youtube.com/watch?v=ru2iMJvUZjI)
 
      When an object is overwritten, it's older version is lost, but
      there is a way we can store older version(s) of an object, no
@@ -427,66 +427,65 @@
        swift post -r ".r:*" archive -H "content-length: 0"
        swift post -r ".r:*" current -H "content-length: 0" -H "X-Versions-Location: archive"
        # --- xxx ---
-
-
      #+END_SRC
-
-	   - https://www.youtube.com/watch?v=ru2iMJvUZjI
 
    - Managing account quota
 
-	 - /Note: Write request to metadata entry is only permitted to
+     - /Note: Write request to metadata entry is only permitted to
        reseller./ Make sure you(in this case /test/ user) have
        =reseller_admin= rights.
 
-	   #+BEGIN_SRC sh
-         # /etc/swift/proxy-server.conf
-         [filter:tempauth]
-         use = egg:swift#tempauth
-         user_admin_admin = admin .admin .reseller_admin
-         user_test_tester = testing .admin .reseller_admin
-         user_test2_tester2 = testing2 .admin
-         user_test_tester3 = testing3
-	   #+END_SRC
+       - =.reseller_admin=: Can do anything to any account.
+       - =.admin=: Can do anything within an account.
 
-	 - Set account quotas
+       #+BEGIN_SRC sh
+	 # /etc/swift/proxy-server.conf
+	 [filter:tempauth]
+	 use = egg:swift#tempauth
+	 user_admin_admin = admin .admin .reseller_admin
+	 user_test_tester = testing .admin .reseller_admin
+	 user_test2_tester2 = testing2 .admin
+	 user_test_tester3 = testing3
+       #+END_SRC
 
-	   #+BEGIN_SRC sh
-         # 10K bytes
-         swift post -m quota-bytes:13000
-         # OR
-         swift post -H "X-Account-Meta-Quota-Bytes:13000"
+     - Set account quotas
 
-         # 3 objects. Note: This is NOT implemented yet(swift version: 2.12.0)
-         swift post -m quota-count:3
-         # OR
-         swift post -H "X-Account-Meta-Quota-Count:3"
+       #+BEGIN_SRC sh
+	 # 10K bytes
+	 swift post -m quota-bytes:13000
+	 # OR
+	 swift post -H "X-Account-Meta-Quota-Bytes:13000"
 
-
-         swift stat -v
-         #                  StorageURL: http://saio:8080/v1/AUTH_test
-         #                  Auth Token: AUTH_tk665649077fc74fca88eebd7274de17f4
-         #                     Account: AUTH_test
-         #                  Containers: 1
-         #                     Objects: 1
-         #                       Bytes: 83412
-         # Containers in policy "gold": 1
-         #    Objects in policy "gold": 1
-         #      Bytes in policy "gold": 83412
-         #            Meta Quota-Bytes: 13000
-         #            Meta Quota-Count: 3
-         #                  X-Trans-Id: tx491cefe71fa848199480c-00586a834c
-         #      X-Openstack-Request-Id: tx491cefe71fa848199480c-00586a834c
-         #                 X-Timestamp: 1483034243.85889
-         #                Content-Type: text/plain; charset=utf-8
-         #               Accept-Ranges: bytes
+	 # 3 objects. Note: This is NOT implemented yet(swift version: 2.12.0)
+	 swift post -m quota-count:3
+	 # OR
+	 swift post -H "X-Account-Meta-Quota-Count:3"
 
 
-         # Remove quota
-         swift post -m quota-count:
-         # OR
-         swift post -H "X-Account-Meta-Quota-Count:"
-	   #+END_SRC
+	 swift stat -v
+	 #                  StorageURL: http://saio:8080/v1/AUTH_test
+	 #                  Auth Token: AUTH_tk665649077fc74fca88eebd7274de17f4
+	 #                     Account: AUTH_test
+	 #                  Containers: 1
+	 #                     Objects: 1
+	 #                       Bytes: 83412
+	 # Containers in policy "gold": 1
+	 #    Objects in policy "gold": 1
+	 #      Bytes in policy "gold": 83412
+	 #            Meta Quota-Bytes: 13000
+	 #            Meta Quota-Count: 3
+	 #                  X-Trans-Id: tx491cefe71fa848199480c-00586a834c
+	 #      X-Openstack-Request-Id: tx491cefe71fa848199480c-00586a834c
+	 #                 X-Timestamp: 1483034243.85889
+	 #                Content-Type: text/plain; charset=utf-8
+	 #               Accept-Ranges: bytes
+
+
+	 # Remove quota
+	 swift post -m quota-count:
+	 # OR
+	 swift post -H "X-Account-Meta-Quota-Count:"
+       #+END_SRC
 
    - Managing container's quota
 
@@ -532,20 +531,20 @@
 ** Builder files
    - Acts as a database
    - Python pickle
-	 #+BEGIN_SRC python -n
+     #+BEGIN_SRC python -n
        import pickle
        print(pickle.load(open('object.builder')))
-	 #+END_SRC
+     #+END_SRC
    - Ring builder command
-	 #+BEGIN_SRC sh
-     # Account server runs on port 6002
-     swift-ring-builder add account.builder <region><zone>-<IP>:6002/<device><weight>
-     # Container server runs on port 6001
-     swift-ring-builder add container.builder <region><zone>-<IP>:6001/<device><weight>
-     # and the Object server runs on port 6000
-     swift-ring-builder add object.builder <region><zone>-<IP>:6000/<device><weight>
-     swift-ring-builder add object-N.builder <region><zone>-<IP>:6000/<device><weight>
-	 #+END_SRC
+     #+BEGIN_SRC sh
+       # Account server runs on port 6002
+       swift-ring-builder add account.builder <region><zone>-<IP>:6002/<device><weight>
+       # Container server runs on port 6001
+       swift-ring-builder add container.builder <region><zone>-<IP>:6001/<device><weight>
+       # and the Object server runs on port 6000
+       swift-ring-builder add object.builder <region><zone>-<IP>:6000/<device><weight>
+       swift-ring-builder add object-N.builder <region><zone>-<IP>:6000/<device><weight>
+     #+END_SRC
    - Region: Geographical location
    - Zone: within region isolation
    - Weight: Relative number of partition a drive will have
@@ -591,6 +590,7 @@
      #+BEGIN_SRC sh
        /srv/2/node/sdb2/objects/171/a56/2ae7be8de859228d6575cc9fe5518a56/1479968148.23926.data
 
+       # Split above path
        /srv/2/node/sdb2/objects/171 # partition number
        /srv/2/node/sdb2/objects/171/a56 # last 3 chars from hashed objectname
        /srv/2/node/sdb2/objects/171/a56/2ae7be8de859228d6575cc9fe5518a56/ # hashed objectname
@@ -638,34 +638,34 @@
     - Based in frequency of access
       - Example:
 	#+BEGIN_SRC sh
-      swift post -H "X-Storage-Policy: gold" container_gold
-      swift post -H "X-Storage-Policy: silver" container_silver
-      swift post -H "X-Storage-Policy: ec42" container_ec42
+	  swift post -H "X-Storage-Policy: gold" container_gold
+	  swift post -H "X-Storage-Policy: silver" container_silver
+	  swift post -H "X-Storage-Policy: ec42" container_ec42
 
-      swift upload container_gold cirros-0.3.4-x86_64-disk.img
-      swift upload container_silver cirros-0.3.4-x86_64-disk.img
-      swift upload container_ec42 cirros-0.3.4-x86_64-disk.img
+	  swift upload container_gold cirros-0.3.4-x86_64-disk.img
+	  swift upload container_silver cirros-0.3.4-x86_64-disk.img
+	  swift upload container_ec42 cirros-0.3.4-x86_64-disk.img
 	#+END_SRC
 
 - Erasure Codes
   - When building a ring for Erasure codes, number of replicas are
     replaced with number of fragments
 
-	#+BEGIN_SRC sh
+    #+BEGIN_SRC sh
       swift-ring-builder object.builder create 10 6 1
-	#+END_SRC
+    #+END_SRC
 
-	where 4 + 2 = 6
+    where 4 + 2 = 6
 
-	4 data fragments
-	2 parity data
+    4: data fragments
+    2: parity data
 
-	So that the system can sustain 4 disk failures before the data is
-    treated to be lost
+    Hence the system can sustain 4 disk failures before the data is
+    treated as lost.
 
   - Erasure coding is implemented in Swift as storage policies
 
-	#+BEGIN_SRC sh
+    #+BEGIN_SRC sh
       # /etc/swift/swift.conf
       [storage-policy:2]
       name = ec42
@@ -673,13 +673,13 @@
       ec_type = liberasurecode_rs_vand
       ec_num_data_fragments = 4
       ec_num_parity_fragments = 2
-	#+END_SRC
+    #+END_SRC
 
   - [[https://www.youtube.com/watch?v=kH3DXMKlEr8]]
   - [[https://www.youtube.com/watch?v=GDNK1S4FJBQ]]
 
 - ACLs
-  - Container ACL
+  - Container ACL(Example: @@latex:\attachfile[icon=Paperclip]{swift_acl_example.txt}@@)
     #+BEGIN_SRC sh
       # World readable
       swift post -r ".r:*" photos
@@ -718,7 +718,7 @@
       use = egg:swift#staticweb
     #+END_SRC
 
-  - Now create a directory =photos= with following heirarchy
+  - Now create a directory =photos= with following hierarchy
     #+BEGIN_SRC sh -n
       $ ls -R
       .:
@@ -954,7 +954,7 @@
      replicate it out to the primary nodes and then if successful,
      delete it.
 
-     handoff nodes + eventual consistancy helps swift keep its awesome
+     handoff nodes + eventual consistency helps swift keep its awesome
      durability
 
 
@@ -966,9 +966,9 @@
 
    - undercloud
 
-	 Verify swift authentication using below command
+     Verify swift authentication using below command
 
-	 #+BEGIN_SRC sh
+     #+BEGIN_SRC sh
        [stack@undercloud ~]$ source stackrc
 
        [stack@undercloud ~]$ swift list
@@ -983,7 +983,7 @@
        # X-Put-Timestamp: 1481719100.59059
        #     X-Timestamp: 1481719100.59059
        #      X-Trans-Id: txd2aa20b0ed084bfc8a059-0058513d3c
-       #     ontent-Type: text/plain; charset=utf-8
+       #    Content-Type: text/plain; charset=utf-8
 
        [stack@undercloud ~]$ swift auth -v
        export OS_IDENTITY_API_VERSION=2.0
@@ -992,9 +992,9 @@
        export OS_PASSWORD=Redhat01
        export OS_TENANT_NAME=admin
        export OS_USERNAME=admin
-	 #+END_SRC
+     #+END_SRC
 
-     Password is derived from puppet configs
+     Password is derived from puppet config
 
      #+BEGIN_SRC sh
        [stack@undercloud:/etc]# grep -r Redhat01 *
@@ -1016,82 +1016,81 @@
 	 - Get *admin* account UUID
 
 	   #+BEGIN_SRC sh
-         [stack@undercloud]$ openstack project list
-         +----------------------------------+---------+
-         | ID                               | Name    |
-         +----------------------------------+---------+
-         | 447097d6f2844cdf9d5d0fa7b8529046 | admin   |
-         | 31f55360edff4a1d81670daf65d720a2 | service |
-         +----------------------------------+---------+
+	     [stack@undercloud]$ openstack project list
+	     +----------------------------------+---------+
+	     | ID                               | Name    |
+	     +----------------------------------+---------+
+	     | 447097d6f2844cdf9d5d0fa7b8529046 | admin   |
+	     | 31f55360edff4a1d81670daf65d720a2 | service |
+	     +----------------------------------+---------+
 	   #+END_SRC
 
 	 - Get token
 
 	   #+BEGIN_SRC sh
-         [stack@undercloud]# openstack token issue
-         +------------+----------------------------------+
-         | Field      | Value                            |
-         +------------+----------------------------------+
-         | expires    | 2016-12-14T17:05:37Z             |
-         | id         | 2de6e7295e1b481a9c12b264ace5284c |
-         | project_id | 447097d6f2844cdf9d5d0fa7b8529046 |
-         | user_id    | b62e1dfc83e5479db4c258b31ebb57bb |
-         +------------+----------------------------------+
+	     [stack@undercloud]# openstack token issue
+	     +------------+----------------------------------+
+	     | Field      | Value                            |
+	     +------------+----------------------------------+
+	     | expires    | 2016-12-14T17:05:37Z             |
+	     | id         | 2de6e7295e1b481a9c12b264ace5284c |
+	     | project_id | 447097d6f2844cdf9d5d0fa7b8529046 |
+	     | user_id    | b62e1dfc83e5479db4c258b31ebb57bb |
+	     +------------+----------------------------------+
 	   #+END_SRC
 
 	 - User admin token and UUID to access swift
 
 	   #+BEGIN_SRC sh
-         [stack@undercloud]# curl -v -H "X-Storage-Token: 2de6e7295e1b481a9c12b264ace5284c" \
-       					http://192.0.2.1:8080/v1/AUTH_447097d6f2844cdf9d5d0fa7b8529046
-         ,* About to connect() to 192.0.2.1 port 8080 (#0)
-         ,*   Trying 192.0.2.1...
-         ,* Connected to 192.0.2.1 (192.0.2.1) port 8080 (#0)
-         > GET /v1/AUTH_447097d6f2844cdf9d5d0fa7b8529046 HTTP/1.1
-         > User-Agent: curl/7.29.0
-         > Host: 192.0.2.1:8080
-         > Accept: */*
-         > X-Storage-Token: 2de6e7295e1b481a9c12b264ace5284c
-         >
-         < HTTP/1.1 204 No Content
-         < Content-Type: text/plain; charset=utf-8
-         < X-Account-Object-Count: 0
-         < X-Timestamp: 1481720818.51417
-         < X-Account-Bytes-Used: 0
-         < X-Account-Container-Count: 0
-         < X-Put-Timestamp: 1481720818.51417
-         < Content-Length: 0
-         < X-Trans-Id: tx2aac9d2dbbe443f3aa758-00585143f2
-         < Date: Wed, 14 Dec 2016 13:06:58 GMT
-         <
-         ,* Connection #0 to host 192.0.2.1 left intact
+	     [stack@undercloud]# curl -v -H "X-Storage-Token: 2de6e7295e1b481a9c12b264ace5284c" \
+					    http://192.0.2.1:8080/v1/AUTH_447097d6f2844cdf9d5d0fa7b8529046
+	     ,* About to connect() to 192.0.2.1 port 8080 (#0)
+	     ,*   Trying 192.0.2.1...
+	     ,* Connected to 192.0.2.1 (192.0.2.1) port 8080 (#0)
+	     > GET /v1/AUTH_447097d6f2844cdf9d5d0fa7b8529046 HTTP/1.1
+	     > User-Agent: curl/7.29.0
+	     > Host: 192.0.2.1:8080
+	     > Accept: */*
+	     > X-Storage-Token: 2de6e7295e1b481a9c12b264ace5284c
+	     >
+	     < HTTP/1.1 204 No Content
+	     < Content-Type: text/plain; charset=utf-8
+	     < X-Account-Object-Count: 0
+	     < X-Timestamp: 1481720818.51417
+	     < X-Account-Bytes-Used: 0
+	     < X-Account-Container-Count: 0
+	     < X-Put-Timestamp: 1481720818.51417
+	     < Content-Length: 0
+	     < X-Trans-Id: tx2aac9d2dbbe443f3aa758-00585143f2
+	     < Date: Wed, 14 Dec 2016 13:06:58 GMT
+	     <
+	     ,* Connection #0 to host 192.0.2.1 left intact
 	   #+END_SRC
 
 
    - TODO: overcloud
 
 	 #+BEGIN_SRC sh
-       [stack@undercloud ~]$ source overcloudrc
-       [stack@undercloud ~]$ swift auth -v
-       export OS_IDENTITY_API_VERSION=2.0
-       export OS_AUTH_VERSION=2.0
-       export OS_AUTH_URL=http://10.0.0.4:5000/v2.0
-       export OS_PASSWORD=tdr8WZh7vFkDzFdQPdXdzFrft
-       export OS_TENANT_NAME=admin
-       export OS_USERNAME=admin
+	   [stack@undercloud ~]$ source overcloudrc
+	   [stack@undercloud ~]$ swift auth -v
+	   export OS_IDENTITY_API_VERSION=2.0
+	   export OS_AUTH_VERSION=2.0
+	   export OS_AUTH_URL=http://10.0.0.4:5000/v2.0
+	   export OS_PASSWORD=tdr8WZh7vFkDzFdQPdXdzFrft
+	   export OS_TENANT_NAME=admin
+	   export OS_USERNAME=admin
 	 #+END_SRC
 
 ** Todo
    - Container sync: Sync container(with same name) to other cluster
-	 - http://docs.openstack.org/developer/swift/overview_container_sync.html
+     - http://docs.openstack.org/developer/swift/overview_container_sync.html
 
 ** Links
    - [[https://github.com/psachin/bootcamp]]
-   - HTML version of this\footnote[1]{Made with Love, \LaTeX, \& GNU Emacs} doc is available at: \newline
-     https://github.com/psachin/bootcamp/blob/master/swift-notes.org
+   - HTML version of this doc is available at: https://github.com/psachin/bootcamp/blob/master/swift-notes.org
    - Slides: [[https://redhat.slides.com/psachin/rhosp-swift-2016]]
    - SAIO on Fedora: [[https://github.com/psachin/fedora-saio]]
    - https://github.com/gholt/ring/blob/master/BASIC_HASH_RING.md
    - http://docs.openstack.org/developer/swift/ring_background.html
-
-@@latex:\attachfile[icon=Paperclip]{swift-notes.org}@@
+   - Org source: @@latex:\attachfile[icon=Paperclip]{swift-notes.org}@@
+   - LaTeX source: @@latex:\attachfile[icon=Paperclip]{swift-notes.tex}@@
