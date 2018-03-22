@@ -529,7 +529,6 @@
        swift post -H "X-Container-Meta-Quota-Bytes:" keys
      #+END_SRC
 
-
 ** Builder files
    - Acts as a database
    - Python pickle
@@ -799,7 +798,7 @@
       from hashlib import md5
 
       m = md5()
-      m.update("/account/container/object")  # Hypothetical path
+      m.update(b"/account/container/object")  # Hypothetical path to an object
       digest = m.hexdigest()
       print(digest)
 
